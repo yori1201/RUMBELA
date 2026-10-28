@@ -113,15 +113,13 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
       {/* Header */}
       <header className="mx-auto mb-6 flex max-w-5xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-lg font-black text-white shadow-lg sm:h-12 sm:w-12">
-            R
-          </div>
-          <div>
-            <h1 className="text-base font-black leading-none tracking-tight sm:text-xl">
-              Rumbela <span className="text-emerald-600">English Quest</span>
-            </h1>
-            <p className="text-[10px] text-slate-500 sm:text-xs">Belajar Bahasa Inggris jadi seru!</p>
-          </div>
+          {/* Rumbela official logo */}
+          <img
+            src="/rumbela/logo-full.png"
+            alt="Rumbela - Rumah belajar Anak"
+            className="h-12 w-auto object-contain drop-shadow-sm sm:h-14"
+            draggable={false}
+          />
         </div>
         <div className="flex items-center gap-1.5">
           <Button
@@ -359,6 +357,19 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           </div>
         )}
       </div>
+
+      {/* Footer with branding */}
+      <footer className="mx-auto mt-8 max-w-5xl border-t border-slate-200/60 px-4 py-6 text-center">
+        <img
+          src="/rumbela/logo-full.png"
+          alt="Rumbela - Rumah belajar Anak"
+          className="mx-auto mb-2 h-10 w-auto object-contain opacity-90 sm:h-12"
+          draggable={false}
+        />
+        <p className="text-xs text-slate-500">
+          &copy; {new Date().getFullYear()} Rumbela · Rumah belajar Anak · English Quest
+        </p>
+      </footer>
 
       {/* Leaderboard Dialog */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>

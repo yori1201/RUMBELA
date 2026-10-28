@@ -12,6 +12,7 @@ export default function Mascot({ mood = "idle", size = 120, message }: MascotPro
   const animations = {
     idle: {
       y: [0, -8, 0],
+      rotate: 0,
       transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
     happy: {
@@ -21,6 +22,7 @@ export default function Mascot({ mood = "idle", size = 120, message }: MascotPro
     },
     thinking: {
       y: [0, -3, 0],
+      rotate: [-2, 2, -2],
       transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const },
     },
     celebrating: {
@@ -30,88 +32,41 @@ export default function Mascot({ mood = "idle", size = 120, message }: MascotPro
     },
     sad: {
       y: [0, 3, 0],
+      rotate: 0,
       transition: { duration: 1.2, repeat: Infinity, ease: "easeInOut" as const },
     },
   }
 
-  // Eye and mouth drawing based on mood
-  const isHappy = mood === "happy" || mood === "celebrating"
-  const isSad = mood === "sad"
+  const anim = animations[mood]
+
+  // Mood-based filter for subtle expression shift
+  const moodFilter =
+    mood === "sad"
+      ? "saturate(0.7) brightness(0.95)"
+      : mood === "celebrating" || mood === "happy"
+      ? "saturate(1.15) brightness(1.05)"
+      : "none"
 
   return (
     <div className="flex flex-col items-center">
       <motion.div
-        animate={animations[mood].y !== undefined ? { y: animations[mood].y } : {}}
-        transition={animations[mood].transition}
+        animate={{ y: anim.y, rotate: anim.rotate }}
+        transition={anim.transition}
         style={{ width: size, height: size }}
         className="relative"
       >
-        <motion.div
-          animate={animations[mood].rotate ? { rotate: animations[mood].rotate } : {}}
-          transition={animations[mood].transition}
-          className="h-full w-full"
-        >
-          <svg viewBox="0 0 200 200" className="h-full w-full drop-shadow-xl">
-            {/* Body - owl shape */}
-            <ellipse cx="100" cy="115" rx="65" ry="70" fill="#10b981" />
-            <ellipse cx="100" cy="115" rx="55" ry="60" fill="#34d399" />
-            {/* Belly */}
-            <ellipse cx="100" cy="130" rx="35" ry="42" fill="#a7f3d0" opacity="0.6" />
-
-            {/* Wings */}
-            <ellipse cx="50" cy="115" rx="20" ry="40" fill="#059669" transform="rotate(-15 50 115)" />
-            <ellipse cx="150" cy="115" rx="20" ry="40" fill="#059669" transform="rotate(15 150 115)" />
-
-            {/* Head tufts */}
-            <path d="M 70 50 Q 65 30 75 35 Q 80 40 80 55 Z" fill="#10b981" />
-            <path d="M 130 50 Q 135 30 125 35 Q 120 40 120 55 Z" fill="#10b981" />
-
-            {/* Eye circles (white) */}
-            <circle cx="80" cy="90" r="22" fill="white" />
-            <circle cx="120" cy="90" r="22" fill="white" />
-
-            {/* Pupils - change with mood */}
-            {isHappy ? (
-              <>
-                {/* Happy closed eyes ^_^ */}
-                <path d="M 68 90 Q 80 80 92 90" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" />
-                <path d="M 108 90 Q 120 80 132 90" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" />
-              </>
-            ) : isSad ? (
-              <>
-                <circle cx="80" cy="92" r="6" fill="#1f2937" />
-                <circle cx="120" cy="92" r="6" fill="#1f2937" />
-                {/* Tear */}
-                <path d="M 70 110 Q 68 120 70 125 Q 72 120 70 110" fill="#60a5fa" opacity="0.8" />
-              </>
-            ) : (
-              <>
-                <circle cx="80" cy="90" r="8" fill="#1f2937" />
-                <circle cx="120" cy="90" r="8" fill="#1f2937" />
-                <circle cx="82" cy="88" r="3" fill="white" />
-                <circle cx="122" cy="88" r="3" fill="white" />
-              </>
-            )}
-
-            {/* Beak */}
-            <path d="M 95 105 L 105 105 L 100 115 Z" fill="#f59e0b" />
-
-            {/* Mouth/expression */}
-            {isHappy && (
-              <path d="M 85 125 Q 100 140 115 125" stroke="#065f46" strokeWidth="3" fill="none" strokeLinecap="round" />
-            )}
-            {isSad && (
-              <path d="M 88 130 Q 100 120 112 130" stroke="#065f46" strokeWidth="3" fill="none" strokeLinecap="round" />
-            )}
-            {mood === "thinking" && (
-              <path d="M 90 128 L 110 128" stroke="#065f46" strokeWidth="3" strokeLinecap="round" />
-            )}
-
-            {/* Feet */}
-            <ellipse cx="80" cy="180" rx="12" ry="6" fill="#f59e0b" />
-            <ellipse cx="120" cy="180" rx="12" ry="6" fill="#f59e0b" />
-          </svg>
-        </motion.div>
+        {/* The actual Rumbela mascot character - Bela the green sprout */}
+        <motion.img
+          src="/rumbela/mascot-bela.png"
+          alt="Bela - Rumbela mascot"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            filter: moodFilter,
+          }}
+          draggable={false}
+        />
 
         {/* Floating sparkles when celebrating */}
         {mood === "celebrating" &&
@@ -140,6 +95,32 @@ export default function Mascot({ mood = "idle", size = 120, message }: MascotPro
               {["✨", "⭐", "💫", "🌟", "✨"][i]}
             </motion.div>
           ))}
+
+        {/* Sad tear */}
+        {mood === "sad" && (
+          <motion.div
+            className="absolute text-2xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: [0, 1, 0], y: [20, 50, 80] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeIn" }}
+            style={{ left: "40%", top: "45%" }}
+          >
+            💧
+          </motion.div>
+        )}
+
+        {/* Thinking thought bubble */}
+        {mood === "thinking" && (
+          <motion.div
+            className="absolute"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            style={{ right: "-8%", top: "-5%", fontSize: size * 0.25 }}
+          >
+            💭
+          </motion.div>
+        )}
       </motion.div>
 
       {message && (
