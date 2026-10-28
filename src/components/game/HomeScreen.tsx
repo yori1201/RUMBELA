@@ -2,13 +2,17 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star } from "lucide-react"
+import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp } from "lucide-react"
 import { CATEGORIES, DIFFICULTIES, ACHIEVEMENTS, type CategoryId, type Difficulty } from "@/lib/game-data"
 import { useGameStore } from "@/lib/game-store"
 import { soundManager } from "@/lib/sound"
 import Mascot from "./Mascot"
 import MissionsPanel from "./MissionsPanel"
 import MissionBadge from "./MissionBadge"
+import StreakBadge from "./StreakBadge"
+import DailyCheckIn from "./DailyCheckIn"
+import ProgressStats from "./ProgressStats"
+import MissionLeaderboard from "./MissionLeaderboard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -125,6 +129,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           />
         </div>
         <div className="flex items-center gap-1.5">
+          <StreakBadge />
           <Button
             variant="outline"
             size="icon"
@@ -161,6 +166,17 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           </Button>
         </div>
       </header>
+
+      {/* Daily Check-in + Streak (jika user sudah ada progres) */}
+      {stats.totalGamesPlayed > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto mb-6 max-w-5xl"
+        >
+          <DailyCheckIn />
+        </motion.section>
+      )}
 
       {/* Hero with Mascot */}
       <motion.section
@@ -361,6 +377,24 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           </div>
         )}
       </div>
+
+      {/* Stats & Leaderboard Section (only if has progress) */}
+      {stats.totalGamesPlayed > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto mt-8 max-w-5xl"
+        >
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-black uppercase tracking-wide text-[#4b4b4b]">
+            <TrendingUp className="h-5 w-5 text-[#58cc02]" />
+            Statistik Belajar
+          </h2>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ProgressStats />
+            <MissionLeaderboard />
+          </div>
+        </motion.section>
+      )}
 
       {/* Footer with branding */}
       <footer className="mx-auto mt-8 max-w-5xl border-t border-slate-200/60 px-4 py-6 text-center">

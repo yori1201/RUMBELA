@@ -31,6 +31,7 @@ interface ResultMeta {
   newAchievements: Achievement[]
   rank: number
   completedMissions: Mission[]
+  streakIncreased: boolean
 }
 
 export default function Home() {
@@ -50,7 +51,7 @@ export default function Home() {
     (res: GameResult) => {
       if (!config) return
       // Record result BEFORE switching to result screen (avoid setState-in-render)
-      const { newAchievements, rank, completedMissions } = recordGameResult(
+      const { newAchievements, rank, completedMissions, streakIncreased } = recordGameResult(
         res.score,
         res.correct,
         res.total,
@@ -60,7 +61,7 @@ export default function Home() {
         config.mode
       )
       setResult(res)
-      setResultMeta({ newAchievements, rank, completedMissions })
+      setResultMeta({ newAchievements, rank, completedMissions, streakIncreased })
       setScreen("result")
       // Trigger confetti if perfect or high accuracy
       if (res.total > 0 && res.correct / res.total >= 0.7) {

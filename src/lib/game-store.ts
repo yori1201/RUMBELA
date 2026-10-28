@@ -26,7 +26,17 @@ export interface LeaderboardEntry {
   date: string
 }
 
-// Extended stats for mission tracking
+// Extended stats for mission tracking + streak + check-in + history
+export interface DayHistoryEntry {
+  date: string // YYYY-MM-DD
+  gamesPlayed: number
+  correct: number
+  score: number
+  maxStreak: number
+  perfectGames: number
+  categoriesPlayed: CategoryId[]
+}
+
 export interface ExtendedStats extends PlayerStats {
   modesPlayed: string[]
   difficultiesPlayed: Difficulty[]
@@ -41,6 +51,15 @@ export interface ExtendedStats extends PlayerStats {
   todayCategoriesPlayed: CategoryId[]
   // Mission rewards claimed
   claimedMissionIds: string[]
+  // Daily streak system
+  dailyStreak: number // current consecutive days played
+  longestStreak: number
+  lastPlayedDate: string // YYYY-MM-DD of last game played
+  // Daily check-in
+  lastCheckInDate: string // YYYY-MM-DD of last claimed check-in
+  totalCheckIns: number
+  // 7-day history for charts
+  history7Days: DayHistoryEntry[]
 }
 
 interface GameState {
@@ -66,8 +85,11 @@ interface GameState {
     newAchievements: Achievement[]
     rank: number
     completedMissions: Mission[]
+    streakIncreased: boolean
   }
   claimMissionReward: (missionId: string) => number // returns reward amount
+  claimDailyCheckIn: () => { reward: number; isFirstCheckIn: boolean; streakBroken: boolean }
+  canCheckInToday: () => boolean
   getMissionContext: () => MissionContext
   resetProgress: () => void
   loadFromStorage: () => void
@@ -91,11 +113,81 @@ const DEFAULT_STATS: ExtendedStats = {
   todayPerfectGames: 0,
   todayCategoriesPlayed: [],
   claimedMissionIds: [],
+  dailyStreak: 0,
+  longestStreak: 0,
+  lastPlayedDate: "",
+  lastCheckInDate: "",
+  totalCheckIns: 0,
+  history7Days: [],
 }
 
 function getTodayKey(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function getYesterdayKey(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+// Calculate days between two YYYY-MM-DD strings
+function daysBetween(date1: string, date2: string): number {
+  if (!date1 || !date2) return 0
+  const d1 = new Date(date1 + "T00:00:00")
+  const d2 = new Date(date2 + "T00:00:00")
+  const diff = Math.abs(d2.getTime() - d1.getTime())
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+// Get last 7 days keys (oldest first, ending today)
+function getLast7DaysKeys(): string[] {
+  const days: string[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`)
+  }
+  return days
+}
+
+// Build/update 7-day history entry for today
+function updateHistory7Days(
+  history: DayHistoryEntry[],
+  todayKey: string,
+  todayStats: { gamesPlayed: number; correct: number; score: number; maxStreak: number; perfectGames: number; categoriesPlayed: CategoryId[] }
+): DayHistoryEntry[] {
+  const last7 = getLast7DaysKeys()
+  // Filter history to only include last 7 days
+  const filtered = history.filter((h) => last7.includes(h.date))
+  // Find or create today's entry
+  const todayEntry = filtered.find((h) => h.date === todayKey)
+  if (todayEntry) {
+    // Update existing
+    return filtered.map((h) =>
+      h.date === todayKey
+        ? {
+            ...h,
+            gamesPlayed: todayStats.gamesPlayed,
+            correct: todayStats.correct,
+            score: todayStats.score,
+            maxStreak: todayStats.maxStreak,
+            perfectGames: todayStats.perfectGames,
+            categoriesPlayed: todayStats.categoriesPlayed,
+          }
+        : h
+    )
+  } else {
+    // Add new entry for today
+    return [
+      ...filtered,
+      {
+        date: todayKey,
+        ...todayStats,
+      },
+    ]
+  }
 }
 
 // Reset daily stats if it's a new day
@@ -179,6 +271,40 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Make sure daily stats are rolled over
     const rolledStats = rolloverDailyIfNeeded(state.stats)
 
+    // Daily streak calculation:
+    // - If first ever game: streak = 1
+    // - If played yesterday (consecutive): streak += 1
+    // - If already played today: streak unchanged (don't increment)
+    // - If gap > 1 day: streak resets to 1
+    const yesterdayKey = getYesterdayKey()
+    let newDailyStreak = rolledStats.dailyStreak
+    let streakIncreased = false
+    if (rolledStats.lastPlayedDate !== todayKey) {
+      // First game today
+      if (rolledStats.lastPlayedDate === yesterdayKey) {
+        // Consecutive day
+        newDailyStreak = rolledStats.dailyStreak + 1
+        streakIncreased = true
+      } else if (rolledStats.lastPlayedDate === "") {
+        // First ever game
+        newDailyStreak = 1
+        streakIncreased = true
+      } else {
+        // Streak broken
+        newDailyStreak = 1
+        streakIncreased = false
+      }
+    }
+
+    const newTodayGamesPlayed = rolledStats.todayGamesPlayed + 1
+    const newTodayCorrect = rolledStats.todayCorrect + correct
+    const newTodayScore = rolledStats.todayScore + score
+    const newTodayMaxStreak = Math.max(rolledStats.todayMaxStreak, maxStreak)
+    const newTodayPerfectGames = rolledStats.todayPerfectGames + (isPerfect ? 1 : 0)
+    const newTodayCategoriesPlayed = rolledStats.todayCategoriesPlayed.includes(category)
+      ? rolledStats.todayCategoriesPlayed
+      : [...rolledStats.todayCategoriesPlayed, category]
+
     const newStats: ExtendedStats = {
       ...rolledStats,
       totalScore: rolledStats.totalScore + score,
@@ -200,14 +326,25 @@ export const useGameStore = create<GameState>((set, get) => ({
         : [...rolledStats.differentDaysPlayed, todayKey],
       // Daily
       todayDateKey: todayKey,
-      todayGamesPlayed: rolledStats.todayGamesPlayed + 1,
-      todayCorrect: rolledStats.todayCorrect + correct,
-      todayScore: rolledStats.todayScore + score,
-      todayMaxStreak: Math.max(rolledStats.todayMaxStreak, maxStreak),
-      todayPerfectGames: rolledStats.todayPerfectGames + (isPerfect ? 1 : 0),
-      todayCategoriesPlayed: rolledStats.todayCategoriesPlayed.includes(category)
-        ? rolledStats.todayCategoriesPlayed
-        : [...rolledStats.todayCategoriesPlayed, category],
+      todayGamesPlayed: newTodayGamesPlayed,
+      todayCorrect: newTodayCorrect,
+      todayScore: newTodayScore,
+      todayMaxStreak: newTodayMaxStreak,
+      todayPerfectGames: newTodayPerfectGames,
+      todayCategoriesPlayed: newTodayCategoriesPlayed,
+      // Streak
+      dailyStreak: newDailyStreak,
+      longestStreak: Math.max(rolledStats.longestStreak, newDailyStreak),
+      lastPlayedDate: todayKey,
+      // Update 7-day history
+      history7Days: updateHistory7Days(rolledStats.history7Days, todayKey, {
+        gamesPlayed: newTodayGamesPlayed,
+        correct: newTodayCorrect,
+        score: newTodayScore,
+        maxStreak: newTodayMaxStreak,
+        perfectGames: newTodayPerfectGames,
+        categoriesPlayed: newTodayCategoriesPlayed,
+      }),
     }
 
     // Check for new achievements
@@ -280,7 +417,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
-    return { newAchievements, rank, completedMissions }
+    return { newAchievements, rank, completedMissions, streakIncreased }
   },
 
   claimMissionReward: (missionId) => {
@@ -320,6 +457,64 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ stats: newStats })
     return mission.reward
+  },
+
+  canCheckInToday: () => {
+    const state = get()
+    const todayKey = getTodayKey()
+    return state.stats.lastCheckInDate !== todayKey
+  },
+
+  claimDailyCheckIn: () => {
+    const state = get()
+    const todayKey = getTodayKey()
+
+    // Already checked in today
+    if (state.stats.lastCheckInDate === todayKey) {
+      return { reward: 0, isFirstCheckIn: false, streakBroken: false }
+    }
+
+    // Determine reward based on consecutive check-in streak
+    const yesterdayKey = getYesterdayKey()
+    let newCheckInStreak = 1
+    let streakBroken = false
+
+    if (state.stats.lastCheckInDate === "") {
+      // First ever check-in
+      newCheckInStreak = 1
+    } else if (state.stats.lastCheckInDate === yesterdayKey) {
+      // Consecutive day
+      newCheckInStreak = state.stats.dailyStreak + 1
+    } else {
+      // Streak broken
+      streakBroken = true
+      newCheckInStreak = 1
+    }
+
+    // Reward scales with check-in streak (capped)
+    const baseReward = 20
+    const streakBonus = Math.min(newCheckInStreak * 5, 50)
+    const reward = baseReward + streakBonus
+
+    const newStats: ExtendedStats = {
+      ...state.stats,
+      totalScore: state.stats.totalScore + reward,
+      todayScore: state.stats.todayScore + reward,
+      lastCheckInDate: todayKey,
+      totalCheckIns: state.stats.totalCheckIns + 1,
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rumbela-stats", JSON.stringify(newStats))
+    }
+
+    set({ stats: newStats })
+
+    return {
+      reward,
+      isFirstCheckIn: state.stats.totalCheckIns === 0,
+      streakBroken,
+    }
   },
 
   getMissionContext: () => {
