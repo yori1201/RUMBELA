@@ -844,3 +844,366 @@ export const ACHIEVEMENTS: Achievement[] = [
     condition: (s) => s.totalGamesPlayed >= 10,
   },
 ]
+
+// ============================================================
+// MISSION SYSTEM - Daily & Main Quests
+// ============================================================
+
+export type MissionType = "daily" | "main"
+export type MissionGoal =
+  | "play-games"           // Mainkan N game
+  | "answer-correct"       // Jawab benar N kali
+  | "earn-points"          // Dapatkan N poin
+  | "reach-streak"         // Capai streak N
+  | "play-category"        // Mainkan kategori tertentu
+  | "play-mode"            // Mainkan mode tertentu
+  | "play-difficulty"      // Mainkan difficulty tertentu
+  | "perfect-game"         // Selesaikan game sempurna
+  | "earn-achievement"     // Buka achievement baru
+  | "play-different-days"  // Main di N hari berbeda (consistency)
+
+export interface Mission {
+  id: string
+  type: MissionType
+  title: string
+  description: string
+  icon: string
+  goal: MissionGoal
+  target: number
+  reward: number // XP/poin reward
+  color: "owl" | "macaw" | "cardinal" | "fox" | "bee" | "beetle"
+}
+
+// ===== MAIN MISSIONS (story progression, sekali selesai) =====
+export const MAIN_MISSIONS: Mission[] = [
+  {
+    id: "main-1",
+    type: "main",
+    title: "Langkah Pertama",
+    description: "Selesaikan game pertamamu",
+    icon: "🎯",
+    goal: "play-games",
+    target: 1,
+    reward: 50,
+    color: "owl",
+  },
+  {
+    id: "main-2",
+    type: "main",
+    title: "Penjelajah Kategori",
+    description: "Mainkan semua 3 kategori (Vocabulary, Grammar, Conversation)",
+    icon: "🗺️",
+    goal: "play-category",
+    target: 3,
+    reward: 100,
+    color: "macaw",
+  },
+  {
+    id: "main-3",
+    type: "main",
+    title: "Master Mode",
+    description: "Selesaikan semua 4 mode permainan",
+    icon: "🎮",
+    goal: "play-mode",
+    target: 4,
+    reward: 150,
+    color: "fox",
+  },
+  {
+    id: "main-4",
+    type: "main",
+    title: "Pemberani",
+    description: "Coba level Advanced",
+    icon: "🔥",
+    goal: "play-difficulty",
+    target: 1,
+    reward: 80,
+    color: "cardinal",
+  },
+  {
+    id: "main-5",
+    type: "main",
+    title: "Sempurna!",
+    description: "Raih skor sempurna di 1 game",
+    icon: "✨",
+    goal: "perfect-game",
+    target: 1,
+    reward: 200,
+    color: "bee",
+  },
+  {
+    id: "main-6",
+    type: "main",
+    title: "Kolektor Achievement",
+    description: "Buka 5 achievement",
+    icon: "🎖️",
+    goal: "earn-achievement",
+    target: 5,
+    reward: 150,
+    color: "beetle",
+  },
+  {
+    id: "main-7",
+    type: "main",
+    title: "Sang Juara",
+    description: "Raih total skor 1000",
+    icon: "👑",
+    goal: "earn-points",
+    target: 1000,
+    reward: 500,
+    color: "owl",
+  },
+  {
+    id: "main-8",
+    type: "main",
+    title: "Konsisten",
+    description: "Main di 5 hari berbeda",
+    icon: "📅",
+    goal: "play-different-days",
+    target: 5,
+    reward: 250,
+    color: "macaw",
+  },
+]
+
+// ===== DAILY MISSIONS (reset tiap hari, 3 misi acak) =====
+export const DAILY_MISSION_POOL: Mission[] = [
+  {
+    id: "daily-play-2",
+    type: "daily",
+    title: "Pemanasan Pagi",
+    description: "Mainkan 2 game hari ini",
+    icon: "☀️",
+    goal: "play-games",
+    target: 2,
+    reward: 30,
+    color: "bee",
+  },
+  {
+    id: "daily-play-3",
+    type: "daily",
+    title: "Aktif Berlatih",
+    description: "Mainkan 3 game hari ini",
+    icon: "📚",
+    goal: "play-games",
+    target: 3,
+    reward: 50,
+    color: "owl",
+  },
+  {
+    id: "daily-correct-5",
+    type: "daily",
+    title: "Lima Tepat",
+    description: "Jawab 5 pertanyaan dengan benar hari ini",
+    icon: "✅",
+    goal: "answer-correct",
+    target: 5,
+    reward: 30,
+    color: "owl",
+  },
+  {
+    id: "daily-correct-10",
+    type: "daily",
+    title: "Sepuluh Tepat",
+    description: "Jawab 10 pertanyaan dengan benar hari ini",
+    icon: "🎯",
+    goal: "answer-correct",
+    target: 10,
+    reward: 60,
+    color: "owl",
+  },
+  {
+    id: "daily-points-100",
+    type: "daily",
+    title: "Poin Harian",
+    description: "Raih 100 poin hari ini",
+    icon: "⭐",
+    goal: "earn-points",
+    target: 100,
+    reward: 40,
+    color: "bee",
+  },
+  {
+    id: "daily-points-200",
+    type: "daily",
+    title: "Hunter Poin",
+    description: "Raih 200 poin hari ini",
+    icon: "💰",
+    goal: "earn-points",
+    target: 200,
+    reward: 80,
+    color: "fox",
+  },
+  {
+    id: "daily-streak-3",
+    type: "daily",
+    title: "Combo Kecil",
+    description: "Raih streak 3x jawaban benar",
+    icon: "🔥",
+    goal: "reach-streak",
+    target: 3,
+    reward: 30,
+    color: "cardinal",
+  },
+  {
+    id: "daily-streak-5",
+    type: "daily",
+    title: "Combo Api",
+    description: "Raih streak 5x jawaban benar",
+    icon: "⚡",
+    goal: "reach-streak",
+    target: 5,
+    reward: 50,
+    color: "cardinal",
+  },
+  {
+    id: "daily-vocab",
+    type: "daily",
+    title: "Vocab Master",
+    description: "Mainkan 1 game Vocabulary",
+    icon: "📖",
+    goal: "play-category",
+    target: 1,
+    reward: 25,
+    color: "owl",
+  },
+  {
+    id: "daily-grammar",
+    type: "daily",
+    title: "Grammar Hero",
+    description: "Mainkan 1 game Grammar",
+    icon: "✏️",
+    goal: "play-category",
+    target: 1,
+    reward: 25,
+    color: "fox",
+  },
+  {
+    id: "daily-conversation",
+    type: "daily",
+    title: "Talkative",
+    description: "Mainkan 1 game Daily Conversation",
+    icon: "💬",
+    goal: "play-category",
+    target: 1,
+    reward: 25,
+    color: "macaw",
+  },
+  {
+    id: "daily-perfect",
+    type: "daily",
+    title: "Sempurna Hari Ini",
+    description: "Selesaikan 1 game dengan skor sempurna",
+    icon: "✨",
+    goal: "perfect-game",
+    target: 1,
+    reward: 100,
+    color: "bee",
+  },
+]
+
+// ===== Daily Mission Generator =====
+// Returns 3 random daily missions, deterministic per day (so they don't change on refresh)
+export function getDailyMissions(date: Date = new Date()): Mission[] {
+  // Seed by date so missions stay same within a day
+  const dateStr = date.toDateString()
+  let seed = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    seed = (seed * 31 + dateStr.charCodeAt(i)) & 0x7fffffff
+  }
+
+  // Pick 3 different missions from the pool using seeded random
+  const pool = [...DAILY_MISSION_POOL]
+  const selected: Mission[] = []
+
+  for (let i = 0; i < 3 && pool.length > 0; i++) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff
+    const idx = seed % pool.length
+    selected.push(pool[idx])
+    pool.splice(idx, 1)
+  }
+
+  return selected
+}
+
+// ===== Mission Progress Tracking =====
+export interface MissionProgress {
+  missionId: string
+  progress: number
+  completed: boolean
+  claimed: boolean
+  dateKey?: string // for daily missions, format YYYY-MM-DD
+}
+
+// Compute mission progress based on player stats + game session data
+export interface MissionContext {
+  totalGamesPlayed: number
+  totalCorrect: number
+  totalScore: number
+  maxStreak: number
+  perfectGames: number
+  unlockedAchievementsCount: number
+  categoriesPlayed: CategoryId[]
+  modesPlayed: string[]
+  difficultiesPlayed: Difficulty[]
+  differentDaysPlayed: string[] // array of YYYY-MM-DD strings
+  // Today-specific (for daily missions)
+  todayGamesPlayed: number
+  todayCorrect: number
+  todayScore: number
+  todayMaxStreak: number
+  todayPerfectGames: number
+  todayCategoriesPlayed: CategoryId[]
+  todayDateKey: string
+}
+
+export function computeMissionProgress(mission: Mission, ctx: MissionContext): number {
+  let current = 0
+
+  if (mission.type === "daily") {
+    switch (mission.goal) {
+      case "play-games": current = ctx.todayGamesPlayed; break
+      case "answer-correct": current = ctx.todayCorrect; break
+      case "earn-points": current = ctx.todayScore; break
+      case "reach-streak": current = ctx.todayMaxStreak; break
+      case "play-category":
+        current = ctx.todayCategoriesPlayed.includes(mission.id.includes("vocab") ? "vocabulary" : mission.id.includes("grammar") ? "grammar" : "conversation") ? 1 : 0
+        // Better: count distinct categories played today matching mission theme
+        if (mission.id === "daily-vocab") current = ctx.todayCategoriesPlayed.includes("vocabulary") ? 1 : 0
+        else if (mission.id === "daily-grammar") current = ctx.todayCategoriesPlayed.includes("grammar") ? 1 : 0
+        else if (mission.id === "daily-conversation") current = ctx.todayCategoriesPlayed.includes("conversation") ? 1 : 0
+        break
+      case "perfect-game": current = ctx.todayPerfectGames; break
+      default: current = 0
+    }
+  } else {
+    // Main mission
+    switch (mission.goal) {
+      case "play-games": current = ctx.totalGamesPlayed; break
+      case "answer-correct": current = ctx.totalCorrect; break
+      case "earn-points": current = ctx.totalScore; break
+      case "reach-streak": current = ctx.maxStreak; break
+      case "play-category": current = ctx.categoriesPlayed.length; break
+      case "play-mode": current = ctx.modesPlayed.length; break
+      case "play-difficulty": current = ctx.difficultiesPlayed.length; break
+      case "perfect-game": current = ctx.perfectGames; break
+      case "earn-achievement": current = ctx.unlockedAchievementsCount; break
+      case "play-different-days": current = ctx.differentDaysPlayed.length; break
+      default: current = 0
+    }
+  }
+
+  return Math.min(current, mission.target)
+}
+
+export function getMissionColorClass(color: Mission["color"]): { bg: string; text: string; border: string } {
+  const map = {
+    owl: { bg: "bg-[#d7ffb8]", text: "text-[#58a700]", border: "border-[#58cc02]" },
+    macaw: { bg: "bg-[#ddf4ff]", text: "text-[#1899d6]", border: "border-[#1cb0f6]" },
+    cardinal: { bg: "bg-[#ffdfe0]", text: "text-[#ea2b2b]", border: "border-[#ff4b4b]" },
+    fox: { bg: "bg-[#ffe8cc]", text: "text-[#cc7a00]", border: "border-[#ff9600]" },
+    bee: { bg: "bg-[#fff5cc]", text: "text-[#998400]", border: "border-[#ffc800]" },
+    beetle: { bg: "bg-[#f0e1ff]", text: "text-[#9b4ddb]", border: "border-[#ce82ff]" },
+  }
+  return map[color]
+}

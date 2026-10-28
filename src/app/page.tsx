@@ -9,7 +9,7 @@ import WordMatchMode from "@/components/game/WordMatchMode"
 import FillBlankMode from "@/components/game/FillBlankMode"
 import SpellMode from "@/components/game/SpellMode"
 import ResultScreen from "@/components/game/ResultScreen"
-import type { Achievement, CategoryId, Difficulty } from "@/lib/game-data"
+import type { Achievement, CategoryId, Difficulty, Mission } from "@/lib/game-data"
 import { useGameStore } from "@/lib/game-store"
 
 type Screen = "home" | "playing" | "result"
@@ -30,6 +30,7 @@ interface GameResult {
 interface ResultMeta {
   newAchievements: Achievement[]
   rank: number
+  completedMissions: Mission[]
 }
 
 export default function Home() {
@@ -49,20 +50,25 @@ export default function Home() {
     (res: GameResult) => {
       if (!config) return
       // Record result BEFORE switching to result screen (avoid setState-in-render)
-      const { newAchievements, rank } = recordGameResult(
+      const { newAchievements, rank, completedMissions } = recordGameResult(
         res.score,
         res.correct,
         res.total,
         config.category,
         config.difficulty,
-        res.maxStreak
+        res.maxStreak,
+        config.mode
       )
       setResult(res)
-      setResultMeta({ newAchievements, rank })
+      setResultMeta({ newAchievements, rank, completedMissions })
       setScreen("result")
       // Trigger confetti if perfect or high accuracy
       if (res.total > 0 && res.correct / res.total >= 0.7) {
         setConfettiTrigger((t) => t + 1)
+      }
+      // Also trigger confetti if a mission was completed
+      if (completedMissions.length > 0) {
+        setTimeout(() => setConfettiTrigger((t) => t + 1), 800)
       }
     },
     [config, recordGameResult]
@@ -164,6 +170,7 @@ export default function Home() {
           playerName={playerName}
           newAchievements={resultMeta.newAchievements}
           rank={resultMeta.rank}
+          completedMissions={resultMeta.completedMissions}
           onPlayAgain={handlePlayAgain}
           onHome={handleHome}
         />

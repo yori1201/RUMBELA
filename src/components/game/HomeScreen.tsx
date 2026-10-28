@@ -2,11 +2,13 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw } from "lucide-react"
+import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star } from "lucide-react"
 import { CATEGORIES, DIFFICULTIES, ACHIEVEMENTS, type CategoryId, type Difficulty } from "@/lib/game-data"
 import { useGameStore } from "@/lib/game-store"
 import { soundManager } from "@/lib/sound"
 import Mascot from "./Mascot"
+import MissionsPanel from "./MissionsPanel"
+import MissionBadge from "./MissionBadge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -80,6 +82,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
   const [soundOn, setSoundOn] = useState(soundManager.isEnabled())
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [showMissions, setShowMissions] = useState(false)
 
   const toggleSound = () => {
     const newVal = !soundOn
@@ -131,6 +134,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           >
             {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </Button>
+          <MissionBadge onClick={() => { soundManager.play("click"); setShowMissions(true) }} />
           <Button
             variant="outline"
             size="icon"
@@ -460,34 +464,24 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Missions Dialog */}
+      <Dialog open={showMissions} onOpenChange={setShowMissions}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-[#58cc02]" /> Misi Belajar
+            </DialogTitle>
+          </DialogHeader>
+          <MissionsPanel
+            onClose={() => setShowMissions(false)}
+            onMissionClaimed={(mission, reward) => {
+              // Could show toast here
+              console.log(`Claimed ${mission.title}: +${reward}`)
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
-  )
-}
-
-// Local flame icon to avoid extra import
-function Flame({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M12 2C9 6 7 9 7 13a5 5 0 0 0 10 0c0-2-1-4-2-5 0 1-1 2-2 2 1-3-1-6-1-8z" />
-    </svg>
-  )
-}
-
-// Local star icon
-function Star({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-    >
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
   )
 }

@@ -1,15 +1,17 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Trophy, Home, RotateCcw, Star, Flame, Target } from "lucide-react"
+import { Trophy, Home, RotateCcw, Star, Flame, Target, Gift, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { soundManager } from "@/lib/sound"
 import {
   CATEGORIES,
   DIFFICULTIES,
+  getMissionColorClass,
   type Achievement,
   type CategoryId,
   type Difficulty,
+  type Mission,
 } from "@/lib/game-data"
 import Mascot from "./Mascot"
 import { useEffect, useRef } from "react"
@@ -27,6 +29,7 @@ interface ResultScreenProps {
   playerName: string
   newAchievements: Achievement[]
   rank: number
+  completedMissions?: Mission[]
   onPlayAgain: () => void
   onHome: () => void
 }
@@ -46,6 +49,7 @@ export default function ResultScreen({
   playerName,
   newAchievements,
   rank,
+  completedMissions = [],
   onPlayAgain,
   onHome,
 }: ResultScreenProps) {
@@ -68,8 +72,11 @@ export default function ResultScreen({
       if (newAchievements.length > 0) {
         setTimeout(() => soundManager.play("achievement"), 1200)
       }
+      if (completedMissions.length > 0) {
+        setTimeout(() => soundManager.play("achievement"), 1800)
+      }
     }
-  }, [isPerfect, isPassing, newAchievements.length])
+  }, [isPerfect, isPassing, newAchievements.length, completedMissions.length])
 
   return (
     <div className="min-h-screen w-full px-4 py-6 sm:px-6">
@@ -192,6 +199,49 @@ export default function ResultScreen({
                       </motion.div>
                     ))}
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Completed Missions */}
+            <AnimatePresence>
+              {completedMissions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="rounded-2xl bg-gradient-to-br from-[#d7ffb8] to-[#ddf4ff] p-4 ring-1 ring-[#58cc02]/30"
+                >
+                  <p className="mb-2 text-center text-xs font-extrabold uppercase tracking-wider text-[#58a700]">
+                    🎯 Misi Selesai! Klaim di Halaman Utama
+                  </p>
+                  <div className="space-y-2">
+                    {completedMissions.map((mission: Mission, idx) => {
+                      const colors = getMissionColorClass(mission.color)
+                      return (
+                        <motion.div
+                          key={mission.id}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", delay: 0.7 + idx * 0.1 }}
+                          className={`flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm ${colors.border} border-2`}
+                        >
+                          <span className="text-3xl">{mission.icon}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className={`font-extrabold ${colors.text}`}>{mission.title}</p>
+                            <p className="text-xs text-[#777777]">{mission.description}</p>
+                          </div>
+                          <div className="flex items-center gap-1 rounded-full bg-[#fff5cc] px-2.5 py-1 text-xs font-extrabold text-[#998400]">
+                            <Sparkles className="h-3 w-3" />
+                            +{mission.reward}
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-2 text-center text-[10px] font-bold text-[#777777]">
+                    💡 Klik tombol "Misi" di halaman utama untuk klaim hadiah
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
