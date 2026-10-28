@@ -9,31 +9,39 @@ interface MascotProps {
 }
 
 export default function Mascot({ mood = "idle", size = 120, message }: MascotProps) {
+  // Framer Motion ambient animation - subtle motion overlay on top of the GIF/WebP
+  // The mascot itself is already animated (WebP with 6 frames breathing/blink/wave/bounce)
+  // These Framer Motion effects add mood-specific ambient motion
   const animations = {
     idle: {
-      y: [0, -8, 0],
+      y: [0, -6, 0],
       rotate: 0,
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
+      scale: 1,
+      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
     },
     happy: {
-      y: [0, -15, 0],
-      rotate: [0, -5, 5, -5, 0],
-      transition: { duration: 0.6, repeat: Infinity, ease: "easeInOut" as const },
+      y: [0, -10, 0],
+      rotate: [0, -3, 3, -3, 0],
+      scale: [1, 1.03, 1],
+      transition: { duration: 0.8, repeat: Infinity, ease: "easeInOut" as const },
     },
     thinking: {
       y: [0, -3, 0],
       rotate: [-2, 2, -2],
-      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const },
+      scale: 1,
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const },
     },
     celebrating: {
-      y: [0, -25, 0],
-      rotate: [0, -10, 10, -10, 10, 0],
-      transition: { duration: 0.5, repeat: Infinity, ease: "easeInOut" as const },
+      y: [0, -20, 0],
+      rotate: [0, -8, 8, -8, 8, 0],
+      scale: [1, 1.08, 1],
+      transition: { duration: 0.6, repeat: Infinity, ease: "easeInOut" as const },
     },
     sad: {
       y: [0, 3, 0],
       rotate: 0,
-      transition: { duration: 1.2, repeat: Infinity, ease: "easeInOut" as const },
+      scale: [1, 0.98, 1],
+      transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" as const },
     },
   }
 
@@ -50,15 +58,16 @@ export default function Mascot({ mood = "idle", size = 120, message }: MascotPro
   return (
     <div className="flex flex-col items-center">
       <motion.div
-        animate={{ y: anim.y, rotate: anim.rotate }}
+        animate={{ y: anim.y, rotate: anim.rotate, scale: anim.scale }}
         transition={anim.transition}
         style={{ width: size, height: size }}
         className="relative"
       >
-        {/* The actual Rumbela mascot character - Bela the green sprout */}
+        {/* Animated Rumbela mascot - Bela the green sprout */}
+        {/* WebP with 6-frame breathing/blink/wave/bounce loop */}
         <motion.img
-          src="/rumbela/mascot-bela.png"
-          alt="Bela - Rumbela mascot"
+          src="/rumbela/mascot-bela-animated.webp"
+          alt="Bela - Rumbela mascot (animated)"
           style={{
             width: "100%",
             height: "100%",

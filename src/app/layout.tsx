@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   keywords: ["Rumbela", "Bimbel Rumbela", "Belajar Bahasa Inggris", "Game Edukasi", "English Quest", "Rumah belajar Anak"],
   authors: [{ name: "Rumbela - Rumah belajar Anak" }],
   icons: {
-    icon: "/rumbela/mascot-bela.png",
-    shortcut: "/rumbela/mascot-bela.png",
-    apple: "/rumbela/mascot-bela.png",
+    icon: "/rumbela/mascot-base.png",
+    shortcut: "/rumbela/mascot-base.png",
+    apple: "/rumbela/mascot-base.png",
   },
   openGraph: {
     title: "Rumbela English Quest",
