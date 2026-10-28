@@ -14,6 +14,8 @@ import {
   type MissionContext,
   MAIN_MISSIONS,
   getDailyMissions,
+  getLevelById,
+  getAllLevelsFlat,
 } from "./game-data"
 
 export interface LeaderboardEntry {
@@ -60,6 +62,10 @@ export interface ExtendedStats extends PlayerStats {
   totalCheckIns: number
   // 7-day history for charts
   history7Days: DayHistoryEntry[]
+  // World Map progression (arcade mode)
+  levelProgress: Record<string, { stars: number; highScore: number; completed: boolean }>
+  unlockedPets: string[]  // PetType[]
+  activePet: string | null  // PetType | null
 }
 
 interface GameState {
@@ -90,6 +96,10 @@ interface GameState {
   claimMissionReward: (missionId: string) => number // returns reward amount
   claimDailyCheckIn: () => { reward: number; isFirstCheckIn: boolean; streakBroken: boolean }
   canCheckInToday: () => boolean
+  // World map arcade mode
+  recordLevelResult: (levelId: string, score: number) => { stars: number; isNewBest: boolean; unlockedPet: string | null; unlockedNext: boolean }
+  isLevelUnlocked: (levelId: string) => boolean
+  setActivePet: (pet: string | null) => void
   getMissionContext: () => MissionContext
   resetProgress: () => void
   loadFromStorage: () => void
@@ -119,6 +129,9 @@ const DEFAULT_STATS: ExtendedStats = {
   lastCheckInDate: "",
   totalCheckIns: 0,
   history7Days: [],
+  levelProgress: {},
+  unlockedPets: [],
+  activePet: null,
 }
 
 function getTodayKey(): string {
@@ -515,6 +528,83 @@ export const useGameStore = create<GameState>((set, get) => ({
       isFirstCheckIn: state.stats.totalCheckIns === 0,
       streakBroken,
     }
+  },
+
+  isLevelUnlocked: (levelId) => {
+    const state = get()
+    const allLevels = getAllLevelsFlat()
+    const idx = allLevels.findIndex((l) => l.id === levelId)
+    if (idx === -1) return false
+    if (idx === 0) return true // First level always unlocked
+    // Previous level must be completed
+    const prevLevel = allLevels[idx - 1]
+    const prevProgress = state.stats.levelProgress[prevLevel.id]
+    return prevProgress?.completed === true
+  },
+
+  recordLevelResult: (levelId, score) => {
+    const state = get()
+    const level = getLevelById(levelId)
+    if (!level) return { stars: 0, isNewBest: false, unlockedPet: null, unlockedNext: false }
+
+    // Calculate stars based on score thresholds
+    let stars = 0
+    if (score >= level.starThresholds.three) stars = 3
+    else if (score >= level.starThresholds.two) stars = 2
+    else if (score >= level.starThresholds.one) stars = 1
+
+    const prevProgress = state.stats.levelProgress[levelId]
+    const isNewBest = !prevProgress || score > prevProgress.highScore
+    const completed = stars > 0
+    const bestStars = Math.max(stars, prevProgress?.stars || 0)
+    const bestScore = Math.max(score, prevProgress?.highScore || 0)
+
+    // Update level progress
+    const newLevelProgress = {
+      ...state.stats.levelProgress,
+      [levelId]: { stars: bestStars, highScore: bestScore, completed: true },
+    }
+
+    // Check pet unlock
+    let unlockedPet: string | null = null
+    const newUnlockedPets = [...state.stats.unlockedPets]
+    if (level.petReward && !newUnlockedPets.includes(level.petReward) && completed) {
+      newUnlockedPets.push(level.petReward)
+      unlockedPet = level.petReward
+      // Auto-activate if no active pet
+      if (!state.stats.activePet) {
+        // Will be set below
+      }
+    }
+
+    const newStats: ExtendedStats = {
+      ...state.stats,
+      levelProgress: newLevelProgress,
+      unlockedPets: newUnlockedPets,
+      activePet: state.stats.activePet || unlockedPet,
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rumbela-stats", JSON.stringify(newStats))
+    }
+
+    set({ stats: newStats })
+
+    // Check if next level is now unlocked
+    const allLevels = getAllLevelsFlat()
+    const idx = allLevels.findIndex((l) => l.id === levelId)
+    const unlockedNext = idx < allLevels.length - 1 && completed
+
+    return { stars, isNewBest, unlockedPet, unlockedNext }
+  },
+
+  setActivePet: (pet) => {
+    const state = get()
+    const newStats = { ...state.stats, activePet: pet }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rumbela-stats", JSON.stringify(newStats))
+    }
+    set({ stats: newStats })
   },
 
   getMissionContext: () => {

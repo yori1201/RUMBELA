@@ -1207,3 +1207,577 @@ export function getMissionColorClass(color: Mission["color"]): { bg: string; tex
   }
   return map[color]
 }
+
+// ============================================================
+// WORLD MAP - Mode Arcade Petualangan Bela
+// Bela terbang melintasi kota-kota Indonesia menuju Sekolah Rumbela
+// ============================================================
+
+export type LevelType = "normal" | "boss" | "bonus" | "final-exam"
+export type CategoryForLevel = CategoryId | "mixed"
+
+export interface LevelNode {
+  id: string           // e.g. "jakarta-1"
+  worldId: string      // e.g. "jakarta"
+  worldName: string    // e.g. "Jakarta"
+  levelNumber: number  // 1-10 within world
+  type: LevelType
+  title: string        // e.g. "Pagi di Jakarta"
+  description: string
+  // Position on SVG map (percentage 0-100)
+  x: number
+  y: number
+  // What player learns
+  category: CategoryForLevel
+  difficulty: Difficulty
+  // Number of questions in this level
+  questionsCount: number
+  // Required score to get 3 stars (1 star = pass, 2 stars = good, 3 stars = perfect)
+  starThresholds: { one: number; two: number; three: number }
+  // Story dialogue shown before level starts
+  intro: string
+  outro: string
+  // Reward on completion (stars + unlock pet on certain levels)
+  petReward?: PetType
+}
+
+export type PetType = "cat" | "dog" | "rabbit" | "bird" | "hamster"
+
+export interface WorldInfo {
+  id: string
+  name: string
+  icon: string
+  description: string
+  color: string
+  gradient: string
+  // SVG position for the world "capital" node (final exam)
+  centerX: number
+  centerY: number
+}
+
+// 5 Worlds (kota-kota Indonesia) - dari rumah menuju sekolah Rumbela
+export const WORLDS: WorldInfo[] = [
+  {
+    id: "jakarta",
+    name: "Jakarta",
+    icon: "🏙️",
+    description: "Berangkat dari rumah di pagi hari",
+    color: "#1cb0f6",
+    gradient: "from-[#1cb0f6] to-[#1899d6]",
+    centerX: 18,
+    centerY: 65,
+  },
+  {
+    id: "bandung",
+    name: "Bandung",
+    icon: "🌄",
+    description: "Lewat pegunungan dan taman",
+    color: "#58cc02",
+    gradient: "from-[#58cc02] to-[#58a700]",
+    centerX: 35,
+    centerY: 55,
+  },
+  {
+    id: "semarang",
+    name: "Semarang",
+    icon: "⛵",
+    description: "Kota pelabuhan dengan banyak perahu",
+    color: "#ffc800",
+    gradient: "from-[#ffc800] to-[#cc9c00]",
+    centerX: 50,
+    centerY: 60,
+  },
+  {
+    id: "surabaya",
+    name: "Surabaya",
+    icon: "🌊",
+    description: "Kota besar dengan jembatan terkenal",
+    color: "#ff9600",
+    gradient: "from-[#ff9600] to-[#cc6a00]",
+    centerX: 70,
+    centerY: 58,
+  },
+  {
+    id: "rumbela-school",
+    name: "Sekolah Rumbela",
+    icon: "🏫",
+    description: "Tujuan akhir! Belajar bareng teman-teman",
+    color: "#ce82ff",
+    gradient: "from-[#ce82ff] to-[#9b4ddb]",
+    centerX: 88,
+    centerY: 52,
+  },
+]
+
+// Level nodes for each world - Bela flies from city to city
+// Each world has: 6 normal + 1 bonus + 1 boss + 1 final-exam = 9 levels
+// (Last world is shorter - just final exam)
+export const LEVELS: LevelNode[] = [
+  // ===== WORLD 1: JAKARTA =====
+  {
+    id: "jakarta-1",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 1,
+    type: "normal",
+    title: "Bangun Pagi",
+    description: "Sapaan pagi & perkenalan diri",
+    x: 8, y: 75,
+    category: "conversation",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🎉 Pagi hari di Jakarta! Bela baru bangun tidur. Ayo bantu Bela menyapa ibunya dan memulai hari!",
+    outro: "Kerja bagus! Bela siap berangkat. Sekarang saatnya sarapan dulu.",
+    petReward: "cat",  // Lvl 1: unlock pet kucing 🐱
+  },
+  {
+    id: "jakarta-2",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 2,
+    type: "normal",
+    title: "Sarapan Pagi",
+    description: "Nama makanan & minuman",
+    x: 14, y: 68,
+    category: "vocabulary",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🍳 Bela lapar! Ayo bantu Bela memesan makanan di dapur.",
+    outro: "Yummy! Bela sudah kenyang. Sekarang waktunya mandi.",
+  },
+  {
+    id: "jakarta-3",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 3,
+    type: "normal",
+    title: "Siap Berangkat",
+    description: "Pakaian & perlengkapan sekolah",
+    x: 20, y: 62,
+    category: "vocabulary",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🎒 Bela siap berangkat! Ayo cek tas sekolahnya sudah lengkap belum.",
+    outro: "Tas sudah lengkap! Sekarang Bela harus turun ke jalan.",
+  },
+  {
+    id: "jakarta-4",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 4,
+    type: "bonus",
+    title: "BONUS: Tukang Sayur",
+    description: "Mini-game: tebak sayur dengan cepat!",
+    x: 16, y: 55,
+    category: "vocabulary",
+    difficulty: "beginner",
+    questionsCount: 6,
+    starThresholds: { one: 40, two: 70, three: 100 },
+    intro: "🥕 Eh, ada tukang sayur lewat! Bela mau beli buah untuk bekal. Cepat tebak namanya!",
+    outro: "Hebat! Bela dapat buah segar untuk bekal.",
+  },
+  {
+    id: "jakarta-5",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 5,
+    type: "normal",
+    title: "Di Halte Bus",
+    description: "Percakapan bertanya arah",
+    x: 22, y: 50,
+    category: "conversation",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🚌 Bela di halte bus. Ayo tanya arah ke stasiun!",
+    outro: "Bela tahu arahnya sekarang. Ayo naik bus!",
+  },
+  {
+    id: "jakarta-6",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 6,
+    type: "normal",
+    title: "Di Dalam Bus",
+    description: "Kalimat perintah & permintaan",
+    x: 18, y: 43,
+    category: "conversation",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🚏 Bela sudah di dalam bus. Ayo bantu Bela bicara dengan penumpang lain.",
+    outro: "Penumpang senang! Bela hampir sampai stasiun.",
+  },
+  {
+    id: "jakarta-7",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 7,
+    type: "boss",
+    title: "BOSS: Kondektur",
+    description: "Percakapan sulit dengan kondektur! Timer cepat!",
+    x: 12, y: 38,
+    category: "mixed",
+    difficulty: "intermediate",
+    questionsCount: 6,
+    starThresholds: { one: 50, two: 80, three: 110 },
+    intro: "👿 Kondektur bus bertanya banyak hal! Bela harus jawab cepat. Jangan gugup!",
+    outro: "Wow! Bela berhasil bayar ongkos dan turun di stasiun.",
+    petReward: "dog",  // Boss reward: unlock anjing 🐶
+  },
+  {
+    id: "jakarta-final",
+    worldId: "jakarta",
+    worldName: "Jakarta",
+    levelNumber: 8,
+    type: "final-exam",
+    title: "FINAL: Stasiun Jakarta",
+    description: "Ujian akhir dunia Jakarta! Lulus untuk buka Bandung",
+    x: 8, y: 32,
+    category: "mixed",
+    difficulty: "intermediate",
+    questionsCount: 8,
+    starThresholds: { one: 60, two: 100, three: 140 },
+    intro: "🎓 Selamat datang di Stasiun Jakarta! Bela harus lulus ujian ini untuk bisa ke Bandung.",
+    outro: "🎉 Luar biasa! Bela lulus ujian Jakarta. Sekarang naik kereta ke Bandung!",
+  },
+
+  // ===== WORLD 2: BANDUNG =====
+  {
+    id: "bandung-1",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 1,
+    type: "normal",
+    title: "Sampai Bandung",
+    description: "Tata bahasa: tenses dasar",
+    x: 28, y: 60,
+    category: "grammar",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "⛰️ Bela sampai di Bandung! Udara segar pegunungan. Ayo belajar tenses dasar.",
+    outro: "Mantap! Bela sudah paham present tense.",
+  },
+  {
+    id: "bandung-2",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 2,
+    type: "normal",
+    title: "Taman Kota",
+    description: "Kata sifat untuk mendeskripsikan",
+    x: 34, y: 55,
+    category: "vocabulary",
+    difficulty: "beginner",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🌳 Bela jalan-jalan di taman kota Bandung. Ayo deskripsikan pemandangan!",
+    outro: "Bela bisa mendeskripsikan benda dengan kata sifat sekarang.",
+  },
+  {
+    id: "bandung-3",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 3,
+    type: "normal",
+    title: "Belanja Souvenir",
+    description: "Harga & bilangan",
+    x: 40, y: 50,
+    category: "conversation",
+    difficulty: "intermediate",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🛍️ Bela beli souvenir di Factory Outlet. Ayo belajar bilangan & harga!",
+    outro: "Bela dapat diskon! Hemat uang.",
+  },
+  {
+    id: "bandung-4",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 4,
+    type: "bonus",
+    title: "BONUS: Es Kuy!",
+    description: "Mini-game: pesan es kuy dengan ejaan cepat",
+    x: 36, y: 45,
+    category: "vocabulary",
+    difficulty: "intermediate",
+    questionsCount: 6,
+    starThresholds: { one: 40, two: 70, three: 100 },
+    intro: "🍦 Ada penjual es kuy! Bela harus pesan dengan ejaan yang benar. Cepat!",
+    outro: "Es kuynya enak! Bela segar kembali.",
+  },
+  {
+    id: "bandung-5",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 5,
+    type: "normal",
+    title: "Naik Gunung",
+    description: "Preposition of place (in/on/at)",
+    x: 42, y: 40,
+    category: "grammar",
+    difficulty: "intermediate",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🏔️ Bela naik ke puncak gunung. Ayo belajar preposition of place!",
+    outro: "Bela di puncak! Pemandangan indah.",
+  },
+  {
+    id: "bandung-6",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 6,
+    type: "boss",
+    title: "BOSS: Pemandu Wisata",
+    description: "Bercerita dengan kalimat kompleks",
+    x: 36, y: 35,
+    category: "mixed",
+    difficulty: "intermediate",
+    questionsCount: 6,
+    starThresholds: { one: 50, two: 80, three: 110 },
+    intro: "导游 Pemandu wisata menguji Bela dengan kalimat kompleks!",
+    outro: "Bela lulus ujian pemandu wisata! Sekarang ke stasiun Semarang.",
+    petReward: "rabbit",  // Boss reward: kelinci 🐰
+  },
+  {
+    id: "bandung-final",
+    worldId: "bandung",
+    worldName: "Bandung",
+    levelNumber: 7,
+    type: "final-exam",
+    title: "FINAL: Stasiun Bandung",
+    description: "Ujian akhir dunia Bandung! Buka jalan ke Semarang",
+    x: 32, y: 30,
+    category: "mixed",
+    difficulty: "intermediate",
+    questionsCount: 8,
+    starThresholds: { one: 60, two: 100, three: 140 },
+    intro: "🎓 Ujian akhir Bandung! Bela harus tunjukkan kemampuan tata bahasanya.",
+    outro: "🎉 Hebat! Bela lulus dan kereta melaju ke Semarang.",
+  },
+
+  // ===== WORLD 3: SEMARANG =====
+  {
+    id: "semarang-1",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 1,
+    type: "normal",
+    title: "Kota Pelabuhan",
+    description: "Kosakata transportasi & laut",
+    x: 44, y: 65,
+    category: "vocabulary",
+    difficulty: "intermediate",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "⚓ Bela sampai di Semarang, kota pelabuhan! Ayo belajar kosakata laut.",
+    outro: "Bela kenal kapal, perahu, dan pelabuhan sekarang.",
+  },
+  {
+    id: "semarang-2",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 2,
+    type: "normal",
+    title: "Lawang Sewu",
+    description: "Past tense (sejarah)",
+    x: 50, y: 60,
+    category: "grammar",
+    difficulty: "intermediate",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🏛️ Bela mengunjungi Lawang Sewu yang bersejarah. Ayo belajar past tense!",
+    outro: "Bela tahu sejarahnya sekarang. Seru!",
+  },
+  {
+    id: "semarang-3",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 3,
+    type: "bonus",
+    title: "BONUS: Bandeng Boat",
+    description: "Mini-game: tangkap ikan bandeng dengan spelling cepat",
+    x: 54, y: 55,
+    category: "vocabulary",
+    difficulty: "intermediate",
+    questionsCount: 6,
+    starThresholds: { one: 40, two: 70, three: 100 },
+    intro: "🐟 Ada perahu nelayan! Bela bantu tangkap ikan dengan ejaan cepat.",
+    outro: "Dapat banyak ikan! Bela jago mancing.",
+  },
+  {
+    id: "semarang-4",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 4,
+    type: "normal",
+    title: "Pasar Semawis",
+    description: "Tawar-menawar dalam English",
+    x: 58, y: 50,
+    category: "conversation",
+    difficulty: "advanced",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🏮 Bela ke pasar Semawis di Pecinan. Ayo belajar tawar-menawar!",
+    outro: "Bela dapat harga miring! Jago banget.",
+  },
+  {
+    id: "semarang-5",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 5,
+    type: "boss",
+    title: "BOSS: Nelayan Tua",
+    description: "Conditional sentences & narrative",
+    x: 54, y: 45,
+    category: "mixed",
+    difficulty: "advanced",
+    questionsCount: 6,
+    starThresholds: { one: 50, two: 80, three: 110 },
+    intro: "🎣 Nelayan tua bercerita banyak tentang lautan. Bela harus paham kalimat conditional!",
+    outro: "Bela paham cerita nelayan. Bijak sekali!",
+    petReward: "bird",  // Boss reward: burung 🐦
+  },
+  {
+    id: "semarang-final",
+    worldId: "semarang",
+    worldName: "Semarang",
+    levelNumber: 6,
+    type: "final-exam",
+    title: "FINAL: Pelabuhan Semarang",
+    description: "Ujian akhir dunia Semarang! Buka jalan ke Surabaya",
+    x: 50, y: 40,
+    category: "mixed",
+    difficulty: "advanced",
+    questionsCount: 8,
+    starThresholds: { one: 60, two: 100, three: 140 },
+    intro: "🎓 Ujian akhir Semarang! Bela harus tunjukkan kemampuannya di pelabuhan.",
+    outro: "🎉 Bela lulus! Sekarang berlayar ke Surabaya.",
+  },
+
+  // ===== WORLD 4: SURABAYA =====
+  {
+    id: "surabaya-1",
+    worldId: "surabaya",
+    worldName: "Surabaya",
+    levelNumber: 1,
+    type: "normal",
+    title: "Jembatan Suramadu",
+    description: "Vocab teknik & struktur",
+    x: 62, y: 65,
+    category: "vocabulary",
+    difficulty: "advanced",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🌉 Bela lewat Jembatan Suramadu yang megah! Ayo belajar kosakata teknis.",
+    outro: "Bela takut ketinggian tapi berhasil lewat.",
+  },
+  {
+    id: "surabaya-2",
+    worldId: "surabaya",
+    worldName: "Surabaya",
+    levelNumber: 2,
+    type: "normal",
+    title: "Tunjungan Plaza",
+    description: "Conversation di mall",
+    x: 68, y: 60,
+    category: "conversation",
+    difficulty: "advanced",
+    questionsCount: 5,
+    starThresholds: { one: 30, two: 60, three: 90 },
+    intro: "🏬 Bela ke mall Tunjungan Plaza. Ayo belajar conversation di mall.",
+    outro: "Bela belanja dengan percaya diri!",
+  },
+  {
+    id: "surabaya-3",
+    worldId: "surabaya",
+    worldName: "Surabaya",
+    levelNumber: 3,
+    type: "boss",
+    title: "BOSS: Sushi Master",
+    description: "Detail & nuance dalam bahasa",
+    x: 72, y: 55,
+    category: "mixed",
+    difficulty: "advanced",
+    questionsCount: 6,
+    starThresholds: { one: 50, two: 80, three: 110 },
+    intro: "🍱 Sushi master menguji detail bahasa Bela. Hati-hati dengan nuance!",
+    outro: "Bela lulus! Master senang dengan kemampuan Bela.",
+    petReward: "hamster",  // Boss reward: hamster 🐹
+  },
+  {
+    id: "surabaya-final",
+    worldId: "surabaya",
+    worldName: "Surabaya",
+    levelNumber: 4,
+    type: "final-exam",
+    title: "FINAL: Stasiun Surabaya",
+    description: "Ujian akhir Surabaya! Terakhir sebelum sampai Rumbela",
+    x: 76, y: 50,
+    category: "mixed",
+    difficulty: "advanced",
+    questionsCount: 8,
+    starThresholds: { one: 60, two: 100, three: 140 },
+    intro: "🎓 Ujian terakhir sebelum sampai Rumbela! Bela harus siap.",
+    outro: "🎉 Bela lulus! Sekarang terbang ke sekolah Rumbela!",
+  },
+
+  // ===== WORLD 5: SEKOLAH RUMBELA (FINAL WORLD) =====
+  {
+    id: "rumbela-final",
+    worldId: "rumbela-school",
+    worldName: "Sekolah Rumbela",
+    levelNumber: 1,
+    type: "final-exam",
+    title: "GRAND FINAL: Upacara Rumbela",
+    description: "Ujian akhir agung! Buktikan kemampuanmu di depan semua guru",
+    x: 88, y: 52,
+    category: "mixed",
+    difficulty: "advanced",
+    questionsCount: 10,
+    starThresholds: { one: 80, two: 130, three: 180 },
+    intro: "🏫🎓 Selamat datang di Sekolah Rumbela! Bela harus lulus ujian agung untuk wisuda. Semua guru menonton!",
+    outro: "🎓🏆 SELAMAT! Bela resmi lulus dari Rumbela! Kamu adalah juara sejati Bahasa Inggris!",
+  },
+]
+
+// Pet info
+export const PETS: Record<PetType, { emoji: string; name: string; description: string }> = {
+  cat: { emoji: "🐱", name: "Mimi", description: "Kucing oren yang suka tidur" },
+  dog: { emoji: "🐶", name: "Buddy", description: "Anjing coklat yang setia" },
+  rabbit: { emoji: "🐰", name: "Pip", description: "Kelinci putih yang lincah" },
+  bird: { emoji: "🐦", name: "Tweety", description: "Burung kuning yang cerewet" },
+  hamster: { emoji: "🐹", name: "Coco", description: "Hamster kecil yang menggemaskan" },
+}
+
+// Helper: get levels for a world
+export function getLevelsByWorld(worldId: string): LevelNode[] {
+  return LEVELS.filter((l) => l.worldId === worldId).sort((a, b) => a.levelNumber - b.levelNumber)
+}
+
+// Helper: get level by ID
+export function getLevelById(id: string): LevelNode | undefined {
+  return LEVELS.find((l) => l.id === id)
+}
+
+// Helper: get all worlds with their levels
+export function getWorldsWithLevels() {
+  return WORLDS.map((w) => ({
+    world: w,
+    levels: getLevelsByWorld(w.id),
+  }))
+}
+
+// Helper: get all levels flattened (for sequential progression)
+export function getAllLevelsFlat(): LevelNode[] {
+  const all: LevelNode[] = []
+  for (const w of WORLDS) {
+    const wLevels = getLevelsByWorld(w.id)
+    all.push(...wLevels)
+  }
+  return all
+}

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp } from "lucide-react"
+import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp, ChevronRight } from "lucide-react"
 import { CATEGORIES, DIFFICULTIES, ACHIEVEMENTS, type CategoryId, type Difficulty } from "@/lib/game-data"
 import { useGameStore } from "@/lib/game-store"
 import { soundManager } from "@/lib/sound"
@@ -31,6 +31,7 @@ interface HomeScreenProps {
     difficulty: Difficulty
     mode: GameMode
   }) => void
+  onStartArcade?: () => void
 }
 
 export type GameMode = "quiz" | "match" | "fill-blank" | "spell"
@@ -77,7 +78,7 @@ const GAME_MODES: {
   },
 ]
 
-export default function HomeScreen({ onStart }: HomeScreenProps) {
+export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) {
   const { playerName, setPlayerName, stats, leaderboard, unlockedAchievements, resetProgress } = useGameStore()
   const [name, setName] = useState(playerName)
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null)
@@ -224,6 +225,99 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
       </motion.section>
 
       <div className="mx-auto max-w-5xl space-y-5">
+        {/* ARCADE MODE - World Map Adventure Banner */}
+        {onStartArcade && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#58cc02] via-[#1cb0f6] to-[#ce82ff] p-5 shadow-xl sm:p-6"
+          >
+            <div className="absolute right-2 top-2 opacity-30 sm:right-4 sm:top-4">
+              <motion.div
+                animate={{ y: [0, -8, 0], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="text-5xl sm:text-6xl"
+              >
+                🗺️
+              </motion.div>
+            </div>
+            <div className="relative">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-white backdrop-blur-sm">
+                  ⭐ Mode Spesial
+                </span>
+                <span className="rounded-full bg-[#ffc800] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-[#998400]">
+                  BARU!
+                </span>
+              </div>
+              <h2 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
+                🌍 Petualangan Bela
+              </h2>
+              <p className="mt-1 max-w-md text-xs text-white/90 sm:text-sm">
+                Terbang dari Jakarta menuju Sekolah Rumbela! Lewati 5 kota,
+                kalahkan Boss, kumpulkan 5 hewan peliharaan!
+              </p>
+
+              {/* Featured highlights */}
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                  🏙️ 5 Kota
+                </span>
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                  🎮 32 Level
+                </span>
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                  👑 4 Boss
+                </span>
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                  🎁 4 Bonus
+                </span>
+                <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase text-white backdrop-blur-sm">
+                  🐱 5 Pet
+                </span>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  soundManager.play("select")
+                  onStartArcade()
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-extrabold uppercase tracking-wide text-[#58cc02] shadow-[0_4px_0_#e5e5e5] active:translate-y-0.5 active:shadow-[0_2px_0_#e5e5e5] transition-all"
+              >
+                🚀 Mulai Petualangan
+                <ChevronRight className="h-4 w-4" />
+              </motion.button>
+            </div>
+
+            {/* Sparkle decorations */}
+            <motion.div
+              className="absolute left-4 top-1/2 text-lg"
+              animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, 180, 360] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+            >
+              ✨
+            </motion.div>
+            <motion.div
+              className="absolute left-1/3 top-3 text-base"
+              animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, -180, -360] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+            >
+              ⭐
+            </motion.div>
+          </motion.section>
+        )}
+
+        {/* Divider with "Atau" */}
+        <div className="flex items-center gap-3 py-1">
+          <div className="h-px flex-1 bg-[#e5e5e5]"></div>
+          <span className="text-xs font-bold uppercase tracking-wide text-[#afafaf]">
+            Atau main mode klasik
+          </span>
+          <div className="h-px flex-1 bg-[#e5e5e5]"></div>
+        </div>
+
         {/* Step 1: Player Name */}
         <section className="space-y-2">
           <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700">
