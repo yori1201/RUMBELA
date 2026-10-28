@@ -6,8 +6,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-nunito);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-nunito);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -44,72 +45,109 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ============================================================
+     RUMBELA ENGLISH QUEST - Duolingo-inspired Design Tokens
+     ============================================================ */
+  --radius: 1rem; /* 16px - chunky rounded like Duolingo */
+
+  /* Background - pure white like Duolingo */
+  --background: #ffffff;
+  --foreground: #4b4b4b;
+
+  --card: #ffffff;
+  --card-foreground: #4b4b4b;
+  --popover: #ffffff;
+  --popover-foreground: #4b4b4b;
+
+  /* Primary - Owl Green #58cc02 */
+  --primary: #58cc02;
+  --primary-foreground: #ffffff;
+  --primary-pressed: #58a700;
+  --primary-soft: #d7ffb8;
+  --primary-mint: #a5ed6e;
+
+  /* Secondary - light surface */
+  --secondary: #f7f7f7;
+  --secondary-foreground: #4b4b4b;
+
+  /* Muted - pencil gray */
+  --muted: #f7f7f7;
+  --muted-foreground: #777777;
+
+  /* Accent - Spark Blue #1cb0f6 (used for secondary interactive) */
+  --accent: #1cb0f6;
+  --accent-foreground: #ffffff;
+
+  /* Destructive - Cardinal Red */
+  --destructive: #ff4b4b;
+  --destructive-soft: #ffdfe0;
+
+  /* Border - thick like Duolingo's 2-3px hairlines */
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #58cc02;
+
+  /* Duolingo accent family - animal-named */
+  --macaw: #1cb0f6;     /* blue */
+  --cardinal: #ff4b4b;  /* red */
+  --fox: #ff9600;       /* orange */
+  --bee: #ffc800;       /* yellow */
+  --beetle: #ce82ff;    /* purple */
+  --koala: #afafaf;     /* gray */
+
+  /* Display ink - deep navy */
+  --ink-display: #042c60;
+  --ink-deep: #100f3e;
+
+  /* Chart colors */
+  --chart-1: #58cc02;
+  --chart-2: #1cb0f6;
+  --chart-3: #ff9600;
+  --chart-4: #ce82ff;
+  --chart-5: #ff4b4b;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #4b4b4b;
+  --sidebar-primary: #58cc02;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d7ffb8;
+  --sidebar-accent-foreground: #4b4b4b;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #58cc02;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #131f24;
+  --foreground: #ffffff;
+  --card: #1f2d34;
+  --card-foreground: #ffffff;
+  --popover: #1f2d34;
+  --popover-foreground: #ffffff;
+  --primary: #58cc02;
+  --primary-foreground: #ffffff;
+  --secondary: #2a3a42;
+  --secondary-foreground: #ffffff;
+  --muted: #2a3a42;
+  --muted-foreground: #afafaf;
+  --accent: #1cb0f6;
+  --accent-foreground: #ffffff;
+  --destructive: #ff4b4b;
+  --border: #2a3a42;
+  --input: #2a3a42;
+  --ring: #58cc02;
+  --chart-1: #58cc02;
+  --chart-2: #1cb0f6;
+  --chart-3: #ff9600;
+  --chart-4: #ce82ff;
+  --chart-5: #ff4b4b;
+  --sidebar: #1f2d34;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #58cc02;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a3a42;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a3a42;
+  --sidebar-ring: #58cc02;
 }
 
 @layer base {
@@ -118,5 +156,249 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-nunito), "Nunito", "DIN Next Rounded", system-ui, sans-serif;
+    font-weight: 600;
   }
+}
+
+/* ============================================================
+   Duolingo-style button utility classes
+   ============================================================ */
+
+/* Chunky button with 3D bottom shadow (like Duolingo's primary CTA) */
+.btn-duo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  border: 2px solid transparent;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-duo:active {
+  transform: translateY(2px);
+}
+.btn-duo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Primary green button - chunky shadow */
+.btn-duo-primary {
+  background: #58cc02;
+  color: #ffffff;
+  box-shadow: 0 4px 0 #58a700;
+  border-color: #58a700;
+}
+.btn-duo-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-duo-primary:active {
+  box-shadow: 0 2px 0 #58a700;
+}
+
+/* Blue secondary button */
+.btn-duo-blue {
+  background: #1cb0f6;
+  color: #ffffff;
+  box-shadow: 0 4px 0 #1899d6;
+  border-color: #1899d6;
+}
+.btn-duo-blue:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-duo-blue:active {
+  box-shadow: 0 2px 0 #1899d6;
+}
+
+/* Outlined button (white card with colored border) */
+.btn-duo-outline {
+  background: #ffffff;
+  color: #1cb0f6;
+  border: 2px solid #e5e5e5;
+  box-shadow: 0 4px 0 #e5e5e5;
+}
+.btn-duo-outline:hover:not(:disabled) {
+  background: #f7f7f7;
+}
+.btn-duo-outline:active {
+  box-shadow: 0 2px 0 #e5e5e5;
+}
+
+/* Danger red button */
+.btn-duo-danger {
+  background: #ff4b4b;
+  color: #ffffff;
+  box-shadow: 0 4px 0 #ea2b2b;
+  border-color: #ea2b2b;
+}
+.btn-duo-danger:active {
+  box-shadow: 0 2px 0 #ea2b2b;
+}
+
+/* ============================================================
+   Duolingo-style option button (quiz answer choice)
+   ============================================================ */
+.option-duo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  color: #4b4b4b;
+  border: 2px solid #e5e5e5;
+  border-radius: 1rem;
+  box-shadow: 0 4px 0 #e5e5e5;
+  font-weight: 700;
+  text-align: left;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s, border-color 0.15s;
+  cursor: pointer;
+  user-select: none;
+}
+.option-duo:hover:not(:disabled) {
+  background: #f7f7f7;
+}
+.option-duo:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #e5e5e5;
+}
+.option-duo:disabled {
+  cursor: default;
+}
+.option-duo.selected {
+  border-color: #1cb0f6;
+  background: #ddf4ff;
+  box-shadow: 0 4px 0 #1899d6;
+}
+.option-duo.correct {
+  border-color: #58cc02;
+  background: #d7ffb8;
+  box-shadow: 0 4px 0 #58a700;
+  color: #58a700;
+}
+.option-duo.wrong {
+  border-color: #ff4b4b;
+  background: #ffdfe0;
+  box-shadow: 0 4px 0 #ea2b2b;
+  color: #ea2b2b;
+}
+
+/* Letter chip inside option */
+.option-duo .chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  background: #f7f7f7;
+  color: #afafaf;
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+.option-duo.selected .chip {
+  background: #1cb0f6;
+  color: #ffffff;
+}
+.option-duo.correct .chip {
+  background: #58cc02;
+  color: #ffffff;
+}
+.option-duo.wrong .chip {
+  background: #ff4b4b;
+  color: #ffffff;
+}
+
+/* ============================================================
+   Duolingo-style card
+   ============================================================ */
+.card-duo {
+  background: #ffffff;
+  border: 2px solid #e5e5e5;
+  border-radius: 1rem;
+  box-shadow: 0 4px 0 #e5e5e5;
+}
+
+/* ============================================================
+   Progress bar Duolingo style (chunky)
+   ============================================================ */
+.progress-duo {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  background: #e5e5e5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-duo-fill {
+  height: 100%;
+  background: #58cc02;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+.progress-duo-fill::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 8px;
+  right: 8px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+}
+
+/* ============================================================
+   Animations - bouncy like Duolingo
+   ============================================================ */
+@keyframes duo-bounce-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-bounce-in {
+  animation: duo-bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes duo-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: duo-pop 0.3s ease;
+}
+
+@keyframes duo-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.animate-shake {
+  animation: duo-shake 0.4s ease;
+}
+
+/* Mascot float - gentle like Duolingo */
+@keyframes duo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: duo-float 3s ease-in-out infinite;
+}
+
+/* Confetti burst */
+@keyframes duo-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
 }
