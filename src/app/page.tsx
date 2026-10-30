@@ -11,8 +11,10 @@ import QuizMode from "@/components/game/QuizMode"
 import WordMatchMode from "@/components/game/WordMatchMode"
 import FillBlankMode from "@/components/game/FillBlankMode"
 import SpellMode from "@/components/game/SpellMode"
+import MathMode from "@/components/game/MathMode"
 import ResultScreen from "@/components/game/ResultScreen"
 import type { Achievement, CategoryId, Difficulty, Mission, LevelNode } from "@/lib/game-data"
+import type { MathLevel } from "@/lib/math-data"
 import { useGameStore } from "@/lib/game-store"
 
 type Screen =
@@ -20,6 +22,7 @@ type Screen =
   | "world-map"
   | "level-intro"
   | "playing"
+  | "playing-math"
   | "result"
   | "level-result"
 
@@ -27,6 +30,10 @@ interface GameConfig {
   category: CategoryId
   difficulty: Difficulty
   mode: GameMode
+}
+
+interface MathConfig {
+  level: MathLevel
 }
 
 interface GameResult {
@@ -53,6 +60,7 @@ interface LevelResultMeta {
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("home")
   const [config, setConfig] = useState<GameConfig | null>(null)
+  const [mathConfig, setMathConfig] = useState<MathConfig | null>(null)
   const [result, setResult] = useState<GameResult | null>(null)
   const [resultMeta, setResultMeta] = useState<ResultMeta | null>(null)
   const [confettiTrigger, setConfettiTrigger] = useState(0)
@@ -66,6 +74,11 @@ export default function Home() {
   const handleStart = (cfg: GameConfig) => {
     setConfig(cfg)
     setScreen("playing")
+  }
+
+  const handleStartMath = (level: MathLevel) => {
+    setMathConfig({ level })
+    setScreen("playing-math")
   }
 
   const handleStartArcade = () => {
@@ -142,7 +155,41 @@ export default function Home() {
     [config, recordGameResult, recordLevelResult, isArcadeMode, selectedLevel]
   )
 
+  const handleMathComplete = useCallback(
+    (res: GameResult) => {
+      if (!mathConfig) return
+      // Catat dengan kategori vocabulary dan difficulty beginner supaya tetap masuk leaderboard
+      // Tapi pakai mode "math" sebagai identifier
+      const { newAchievements, rank, completedMissions, streakIncreased } = recordGameResult(
+        res.score,
+        res.correct,
+        res.total,
+        "vocabulary", // kategori placeholder
+        "beginner",   // difficulty placeholder
+        res.maxStreak,
+        "math"        // mode identifier
+      )
+
+      setResult(res)
+      setResultMeta({ newAchievements, rank, completedMissions, streakIncreased })
+      setScreen("result")
+      if (res.total > 0 && res.correct / res.total >= 0.7) {
+        setConfettiTrigger((t) => t + 1)
+      }
+      if (completedMissions.length > 0) {
+        setTimeout(() => setConfettiTrigger((t) => t + 1), 800)
+      }
+    },
+    [mathConfig, recordGameResult]
+  )
+
   const handlePlayAgain = () => {
+    if (mathConfig) {
+      setScreen("playing-math")
+      setResult(null)
+      setResultMeta(null)
+      return
+    }
     if (config) {
       setScreen("playing")
       setResult(null)
@@ -169,6 +216,7 @@ export default function Home() {
   const handleHome = () => {
     setScreen("home")
     setConfig(null)
+    setMathConfig(null)
     setResult(null)
     setResultMeta(null)
     setSelectedLevel(null)
@@ -203,7 +251,7 @@ export default function Home() {
       <Confetti trigger={confettiTrigger} />
 
       {screen === "home" && (
-        <HomeScreen onStart={handleStart} onStartArcade={handleStartArcade} />
+        <HomeScreen onStart={handleStart} onStartArcade={handleStartArcade} onStartMath={handleStartMath} />
       )}
 
       {screen === "world-map" && (
@@ -263,12 +311,20 @@ export default function Home() {
         </>
       )}
 
-      {screen === "result" && config && result && resultMeta && (
+      {screen === "playing-math" && mathConfig && (
+        <MathMode
+          level={mathConfig.level}
+          onComplete={handleMathComplete}
+          onExit={handleHome}
+        />
+      )}
+
+      {screen === "result" && result && resultMeta && (
         <ResultScreen
           result={result}
-          category={config.category}
-          difficulty={config.difficulty}
-          mode={config.mode}
+          category={config?.category || "vocabulary"}
+          difficulty={config?.difficulty || "beginner"}
+          mode={mathConfig ? "math" : (config?.mode || "quiz")}
           playerName={playerName}
           newAchievements={resultMeta.newAchievements}
           rank={resultMeta.rank}

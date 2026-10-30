@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp, ChevronRight } from "lucide-react"
+import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp, ChevronRight, Calculator } from "lucide-react"
 import { CATEGORIES, DIFFICULTIES, ACHIEVEMENTS, type CategoryId, type Difficulty } from "@/lib/game-data"
+import { MATH_LEVELS, type MathLevel } from "@/lib/math-data"
 import { useGameStore } from "@/lib/game-store"
 import { soundManager } from "@/lib/sound"
 import Mascot from "./Mascot"
@@ -32,6 +33,7 @@ interface HomeScreenProps {
     mode: GameMode
   }) => void
   onStartArcade?: () => void
+  onStartMath?: (level: MathLevel) => void
 }
 
 export type GameMode = "quiz" | "match" | "fill-blank" | "spell"
@@ -78,9 +80,10 @@ const GAME_MODES: {
   },
 ]
 
-export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) {
+export default function HomeScreen({ onStart, onStartArcade, onStartMath }: HomeScreenProps) {
   const { playerName, setPlayerName, stats, leaderboard, unlockedAchievements, resetProgress } = useGameStore()
   const [name, setName] = useState(playerName)
+  const [isEditingName, setIsEditingName] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null)
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null)
@@ -97,15 +100,18 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
   }
 
   const handleStart = () => {
-    if (!name.trim()) {
+    const finalName = (name || playerName || "").trim()
+    if (!finalName) {
       soundManager.play("wrong")
+      setIsEditingName(true)
       return
     }
     if (!selectedCategory || !selectedDifficulty || !selectedMode) {
       soundManager.play("wrong")
       return
     }
-    setPlayerName(name.trim())
+    setPlayerName(finalName)
+    setIsEditingName(false)
     soundManager.play("select")
     onStart({
       category: selectedCategory,
@@ -114,7 +120,9 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
     })
   }
 
-  const canStart = name.trim() && selectedCategory && selectedDifficulty && selectedMode
+  const canStart = (name || playerName || "").trim() && selectedCategory && selectedDifficulty && selectedMode
+  const displayName = (name || playerName || "").trim()
+  const hasSavedName = !!playerName.trim()
 
   return (
     <div className="min-h-screen w-full px-4 py-6 sm:px-6">
@@ -187,7 +195,7 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
       >
         <div className="grid grid-cols-1 items-center gap-4 rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-5 shadow-xl ring-1 ring-emerald-100/50 sm:grid-cols-[auto_1fr] sm:p-8">
           <div className="flex justify-center">
-            <Mascot mood="happy" size={140} message={`Halo ${name || "teman"}! Ayo belajar bareng Bela!`} />
+            <Mascot mood="happy" size={140} message={`Halo ${displayName || "teman"}! Ayo belajar bareng Bela!`} />
           </div>
           <div className="space-y-3 text-center sm:text-left">
             <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
@@ -225,6 +233,87 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
       </motion.section>
 
       <div className="mx-auto max-w-5xl space-y-5">
+        {/* MATH ADVENTURE - Game Berhitung */}
+        {onStartMath && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#ff4b6e] via-[#ff8c42] to-[#ffc93c] p-5 shadow-xl sm:p-6"
+          >
+            <div className="absolute right-2 top-2 opacity-30 sm:right-4 sm:top-4">
+              <motion.div
+                animate={{ y: [0, -8, 0], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-5xl sm:text-6xl"
+              >
+                🎈
+              </motion.div>
+            </div>
+            <div className="relative">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-white backdrop-blur-sm">
+                  🧮 Game Berhitung
+                </span>
+                <span className="rounded-full bg-[#ffc800] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest text-[#998400]">
+                  BARU!
+                </span>
+              </div>
+              <h2 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl">
+                🫧 Math Adventure
+              </h2>
+              <p className="mt-1 max-w-md text-xs text-white/90 sm:text-sm">
+                Pecahkan balon angka dengan suara! Cocok untuk TK, SD, dan SMP.
+                Soal berbeda untuk tiap tingkat usia.
+              </p>
+
+              {/* Math level selector */}
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {MATH_LEVELS.map((lv) => (
+                  <motion.button
+                    key={lv.id}
+                    whileHover={{ scale: 1.04, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => {
+                      soundManager.play("select")
+                      onStartMath(lv.id)
+                    }}
+                    className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${lv.gradient} p-3 text-left shadow-lg ring-2 ring-white/40 transition-all hover:ring-white`}
+                  >
+                    <div className="text-2xl">{lv.icon}</div>
+                    <p className="mt-1 text-sm font-black text-white drop-shadow">{lv.shortName}</p>
+                    <p className="text-[9px] font-medium leading-tight text-white/90">{lv.description.split(",")[0]}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="rounded-full bg-white/30 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        {lv.questionCount} soal
+                      </span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+
+              <p className="mt-3 text-[11px] text-white/80">
+                💡 Tip: Suara akan otomatis membacakan soal. Klik balon angka yang benar!
+              </p>
+            </div>
+
+            {/* Floating bubble decorations */}
+            <motion.div
+              className="absolute left-2 bottom-2 text-2xl opacity-50"
+              animate={{ y: [0, -10, 0], x: [0, 5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+            >
+              🔢
+            </motion.div>
+            <motion.div
+              className="absolute right-1/3 bottom-3 text-xl opacity-40"
+              animate={{ y: [0, -8, 0], x: [0, -3, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, delay: 1.2 }}
+            >
+              ✨
+            </motion.div>
+          </motion.section>
+        )}
+
         {/* ARCADE MODE - World Map Adventure Banner */}
         {onStartArcade && (
           <motion.section
@@ -318,19 +407,65 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
           <div className="h-px flex-1 bg-[#e5e5e5]"></div>
         </div>
 
-        {/* Step 1: Player Name */}
+        {/* Step 1: Player Name (collapsed greeting if already set) */}
         <section className="space-y-2">
           <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-white">1</span>
-            Siapa namamu?
+            {hasSavedName && !isEditingName ? "Pemain" : "Siapa namamu?"}
           </h3>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Tulis namamu di sini..."
-            maxLength={20}
-            className="h-12 rounded-xl bg-white text-base font-semibold shadow-sm"
-          />
+          {hasSavedName && !isEditingName ? (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-sm ring-1 ring-emerald-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-lg font-black text-white shadow-sm">
+                  {playerName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-base font-black text-slate-800">{playerName}</p>
+                  <p className="text-[10px] text-slate-500">Selamat datang kembali! 👋</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  soundManager.play("click")
+                  setIsEditingName(true)
+                }}
+                className="text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              >
+                Ganti
+              </Button>
+            </motion.div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tulis namamu di sini..."
+                maxLength={20}
+                autoFocus
+                className="h-12 flex-1 rounded-xl bg-white text-base font-semibold shadow-sm"
+              />
+              {hasSavedName && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    soundManager.play("click")
+                    setName(playerName)
+                    setIsEditingName(false)
+                  }}
+                  className="h-12 rounded-xl px-4 text-sm font-bold"
+                >
+                  Batal
+                </Button>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Step 2: Category */}
@@ -447,7 +582,7 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
           >
             {!canStart
               ? "Lengkapi pilihanmu dulu ya!"
-              : `🚀 Mulai Petualangan, ${name}!`}
+              : `🚀 Mulai Petualangan, ${displayName}!`}
           </Button>
         </motion.div>
 
@@ -461,6 +596,7 @@ export default function HomeScreen({ onStart, onStartArcade }: HomeScreenProps) 
                 if (confirm("Yakin mau reset semua progres? Skor, achievement, dan leaderboard akan hilang.")) {
                   resetProgress()
                   setName("")
+                  setIsEditingName(false)
                   soundManager.play("click")
                 }
               }}
