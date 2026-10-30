@@ -1,30 +1,23 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import AnimatedBackground from "@/components/game/AnimatedBackground"
 import Confetti from "@/components/game/Confetti"
 import HomeScreen, { type GameMode } from "@/components/game/HomeScreen"
-import WorldMap from "@/components/game/WorldMap"
-import LevelIntroScreen from "@/components/game/LevelIntroScreen"
-import LevelResultScreen from "@/components/game/LevelResultScreen"
 import QuizMode from "@/components/game/QuizMode"
 import WordMatchMode from "@/components/game/WordMatchMode"
 import FillBlankMode from "@/components/game/FillBlankMode"
 import SpellMode from "@/components/game/SpellMode"
 import MathMode from "@/components/game/MathMode"
 import ResultScreen from "@/components/game/ResultScreen"
-import type { Achievement, CategoryId, Difficulty, Mission, LevelNode } from "@/lib/game-data"
+import AccessGate, { checkExistingAccess, clearAccess } from "@/components/game/AccessGate"
+import AdminPanel from "@/components/game/AdminPanel"
+import type { Achievement, CategoryId, Difficulty, Mission } from "@/lib/game-data"
 import type { MathLevel } from "@/lib/math-data"
 import { useGameStore } from "@/lib/game-store"
 
-type Screen =
-  | "home"
-  | "world-map"
-  | "level-intro"
-  | "playing"
-  | "playing-math"
-  | "result"
-  | "level-result"
+type Screen = "access" | "home" | "playing" | "playing-math" | "result" | "admin"
 
 interface GameConfig {
   category: CategoryId
@@ -50,26 +43,47 @@ interface ResultMeta {
   streakIncreased: boolean
 }
 
-interface LevelResultMeta {
-  stars: number
-  isNewBest: boolean
-  unlockedPet: string | null
-  unlockedNext: boolean
+// Determine initial screen based on URL + localStorage access (called once, lazily)
+function getInitialScreen(isAdmin: boolean): Screen {
+  if (typeof window === "undefined") return "access"
+  if (isAdmin) return "admin"
+  return checkExistingAccess() ? "home" : "access"
 }
 
-export default function Home() {
-  const [screen, setScreen] = useState<Screen>("home")
+// HomeContent uses useSearchParams() which requires a Suspense boundary
+// for static prerendering in Next.js.
+function HomeContent() {
+  // Check URL for admin mode (must be in client component)
+  const searchParams = useSearchParams()
+  const isAdminMode = searchParams.get("admin") === "1"
+
+  // Initial screen - lazy init based on URL + localStorage
+  const [screen, setScreen] = useState<Screen>(() => getInitialScreen(isAdminMode))
   const [config, setConfig] = useState<GameConfig | null>(null)
   const [mathConfig, setMathConfig] = useState<MathConfig | null>(null)
   const [result, setResult] = useState<GameResult | null>(null)
   const [resultMeta, setResultMeta] = useState<ResultMeta | null>(null)
   const [confettiTrigger, setConfettiTrigger] = useState(0)
-  const { recordGameResult, playerName, recordLevelResult } = useGameStore()
+  const { recordGameResult, playerName, setPlayerName } = useGameStore()
 
-  // Arcade mode state
-  const [selectedLevel, setSelectedLevel] = useState<LevelNode | null>(null)
-  const [levelResultMeta, setLevelResultMeta] = useState<LevelResultMeta | null>(null)
-  const [isArcadeMode, setIsArcadeMode] = useState(false)
+  // If existing access and player name not set, set it
+  useEffect(() => {
+    if (screen === "home" && !playerName) {
+      const existing = checkExistingAccess()
+      if (existing?.name) {
+        setPlayerName(existing.name)
+      }
+    }
+  }, [screen, playerName, setPlayerName])
+
+  const handleAccessGranted = useCallback(
+    (deviceToken: string, deviceName: string) => {
+      // Set player name from access gate
+      setPlayerName(deviceName)
+      setScreen("home")
+    },
+    [setPlayerName]
+  )
 
   const handleStart = (cfg: GameConfig) => {
     setConfig(cfg)
@@ -81,43 +95,9 @@ export default function Home() {
     setScreen("playing-math")
   }
 
-  const handleStartArcade = () => {
-    setIsArcadeMode(true)
-    setScreen("world-map")
-  }
-
-  const handleBackToClassic = () => {
-    setIsArcadeMode(false)
-    setScreen("home")
-  }
-
-  const handleLevelSelect = (level: LevelNode) => {
-    setSelectedLevel(level)
-    setScreen("level-intro")
-  }
-
-  const handleStartLevel = () => {
-    if (!selectedLevel) return
-    // Convert level to game config
-    const gameMode: GameMode =
-      selectedLevel.type === "bonus" ? "spell" :
-      selectedLevel.type === "boss" ? "quiz" :
-      selectedLevel.type === "final-exam" ? "quiz" :
-      "quiz"  // default to quiz for normal levels too (could vary)
-
-    setConfig({
-      category: selectedLevel.category === "mixed" ? "vocabulary" : selectedLevel.category,
-      difficulty: selectedLevel.difficulty,
-      mode: gameMode,
-    })
-    setScreen("playing")
-  }
-
   const handleComplete = useCallback(
     (res: GameResult) => {
       if (!config) return
-
-      // Record result for stats/leaderboard
       const { newAchievements, rank, completedMissions, streakIncreased } = recordGameResult(
         res.score,
         res.correct,
@@ -127,39 +107,22 @@ export default function Home() {
         res.maxStreak,
         config.mode
       )
-
       setResult(res)
-
-      if (isArcadeMode && selectedLevel) {
-        // Record level progress
-        const levelResult = recordLevelResult(selectedLevel.id, res.score)
-        setLevelResultMeta(levelResult)
-        setScreen("level-result")
-        if (levelResult.stars >= 3) {
-          setConfettiTrigger((t) => t + 1)
-        }
-        if (levelResult.unlockedPet) {
-          setTimeout(() => setConfettiTrigger((t) => t + 1), 1200)
-        }
-      } else {
-        setResultMeta({ newAchievements, rank, completedMissions, streakIncreased })
-        setScreen("result")
-        if (res.total > 0 && res.correct / res.total >= 0.7) {
-          setConfettiTrigger((t) => t + 1)
-        }
-        if (completedMissions.length > 0) {
-          setTimeout(() => setConfettiTrigger((t) => t + 1), 800)
-        }
+      setResultMeta({ newAchievements, rank, completedMissions, streakIncreased })
+      setScreen("result")
+      if (res.total > 0 && res.correct / res.total >= 0.7) {
+        setConfettiTrigger((t) => t + 1)
+      }
+      if (completedMissions.length > 0) {
+        setTimeout(() => setConfettiTrigger((t) => t + 1), 800)
       }
     },
-    [config, recordGameResult, recordLevelResult, isArcadeMode, selectedLevel]
+    [config, recordGameResult]
   )
 
   const handleMathComplete = useCallback(
     (res: GameResult) => {
       if (!mathConfig) return
-      // Catat dengan kategori vocabulary dan difficulty beginner supaya tetap masuk leaderboard
-      // Tapi pakai mode "math" sebagai identifier
       const { newAchievements, rank, completedMissions, streakIncreased } = recordGameResult(
         res.score,
         res.correct,
@@ -169,7 +132,6 @@ export default function Home() {
         res.maxStreak,
         "math"        // mode identifier
       )
-
       setResult(res)
       setResultMeta({ newAchievements, rank, completedMissions, streakIncreased })
       setScreen("result")
@@ -197,30 +159,18 @@ export default function Home() {
     }
   }
 
-  const handleRetryLevel = () => {
-    if (config) {
-      setScreen("playing")
-      setResult(null)
-      setLevelResultMeta(null)
-    }
-  }
-
-  const handleContinueLevel = () => {
-    // Go back to world map to select next level
-    setSelectedLevel(null)
-    setLevelResultMeta(null)
-    setResult(null)
-    setScreen("world-map")
-  }
-
   const handleHome = () => {
     setScreen("home")
     setConfig(null)
     setMathConfig(null)
     setResult(null)
     setResultMeta(null)
-    setSelectedLevel(null)
-    setLevelResultMeta(null)
+  }
+
+  const handleExitAdmin = () => {
+    // Remove ?admin=1 from URL
+    window.history.replaceState({}, "", "/")
+    setScreen(checkExistingAccess() ? "home" : "access")
   }
 
   const getLives = (difficulty: Difficulty) => {
@@ -247,27 +197,22 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen w-full bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
-      <AnimatedBackground />
-      <Confetti trigger={confettiTrigger} />
-
-      {screen === "home" && (
-        <HomeScreen onStart={handleStart} onStartArcade={handleStartArcade} onStartMath={handleStartMath} />
-      )}
-
-      {screen === "world-map" && (
-        <WorldMap onLevelSelect={handleLevelSelect} />
-      )}
-
-      {screen === "level-intro" && selectedLevel && (
+      {screen !== "access" && screen !== "admin" && (
         <>
-          <WorldMap onLevelSelect={handleLevelSelect} />
-          <LevelIntroScreen
-            level={selectedLevel}
-            onStart={handleStartLevel}
-            onCancel={handleBackToClassic}
-          />
+          <AnimatedBackground />
+          <Confetti trigger={confettiTrigger} />
         </>
       )}
+
+      {screen === "access" && (
+        <AccessGate onAccessGranted={handleAccessGranted} />
+      )}
+
+      {screen === "admin" && (
+        <AdminPanel onExit={handleExitAdmin} />
+      )}
+
+      {screen === "home" && <HomeScreen onStart={handleStart} onStartMath={handleStartMath} />}
 
       {screen === "playing" && config && (
         <>
@@ -333,23 +278,28 @@ export default function Home() {
           onHome={handleHome}
         />
       )}
-
-      {screen === "level-result" && selectedLevel && result && levelResultMeta && (
-        <>
-          <WorldMap onLevelSelect={handleLevelSelect} />
-          <LevelResultScreen
-            level={selectedLevel}
-            score={result.score}
-            stars={levelResultMeta.stars}
-            isNewBest={levelResultMeta.isNewBest}
-            unlockedPet={levelResultMeta.unlockedPet}
-            unlockedNext={levelResultMeta.unlockedNext}
-            onContinue={handleContinueLevel}
-            onRetry={handleRetryLevel}
-            onExit={handleBackToClassic}
-          />
-        </>
-      )}
     </main>
+  )
+}
+
+// Loading fallback shown while Suspense resolves (server render)
+function HomeLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
+      <div className="text-center">
+        <div className="mx-auto mb-3 h-12 w-12 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-500" />
+        <p className="text-sm font-bold text-slate-500">Memuat Rumbela...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main export - wraps HomeContent in Suspense so useSearchParams()
+// doesn't break static prerendering (Next.js requirement)
+export default function Home() {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeContent />
+    </Suspense>
   )
 }
