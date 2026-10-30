@@ -10,9 +10,9 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Rumbela English Quest - Belajar Bahasa Inggris Jadi Seru!",
-  description: "Game belajar Bahasa Inggris interaktif untuk bimbel Rumbela. Quiz, Word Match, Fill the Blank, dan Spell Master dengan mascot Bela.",
-  keywords: ["Rumbela", "Bimbel Rumbela", "Belajar Bahasa Inggris", "Game Edukasi", "English Quest", "Rumah belajar Anak"],
+  title: "RUMBELA GAMES - Belajar Jadi Seru!",
+  description: "Kumpulan game edukasi untuk bimbel Rumbela. Belajar Bahasa Inggris (Quiz, Word Match, Fill the Blank, Spell Master) dan Berhitung (Math Adventure) dengan mascot Bela.",
+  keywords: ["Rumbela Games", "Rumbela", "Bimbel Rumbela", "Belajar Bahasa Inggris", "Game Berhitung", "Game Edukasi", "Rumah belajar Anak"],
   authors: [{ name: "Rumbela - Rumah belajar Anak" }],
   icons: {
     icon: "/rumbela/mascot-base.png",
@@ -20,15 +20,15 @@ export const metadata: Metadata = {
     apple: "/rumbela/mascot-base.png",
   },
   openGraph: {
-    title: "Rumbela English Quest",
-    description: "Belajar Bahasa Inggris jadi seru bareng Bela!",
-    siteName: "Rumbela",
+    title: "RUMBELA GAMES",
+    description: "Belajar Bahasa Inggris & Berhitung jadi seru bareng Bela!",
+    siteName: "Rumbela Games",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rumbela English Quest",
-    description: "Belajar Bahasa Inggris jadi seru bareng Bela!",
+    title: "RUMBELA GAMES",
+    description: "Belajar Bahasa Inggris & Berhitung jadi seru bareng Bela!",
   },
 };
 

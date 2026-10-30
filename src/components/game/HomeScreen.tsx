@@ -1,12 +1,13 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Trophy, Settings, Volume2, VolumeX, Sparkles, BookOpen, Award, RotateCcw, Flame, Target, Star, TrendingUp, Calculator } from "lucide-react"
 import { CATEGORIES, DIFFICULTIES, ACHIEVEMENTS, type CategoryId, type Difficulty } from "@/lib/game-data"
 import { MATH_LEVELS, type MathLevel } from "@/lib/math-data"
 import { useGameStore } from "@/lib/game-store"
 import { soundManager } from "@/lib/sound"
+import { preloadVoices } from "@/lib/use-auto-speak"
 import Mascot from "./Mascot"
 import MissionsPanel from "./MissionsPanel"
 import MissionBadge from "./MissionBadge"
@@ -90,6 +91,12 @@ export default function HomeScreen({ onStart, onStartMath }: HomeScreenProps) {
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
   const [showMissions, setShowMissions] = useState(false)
+
+  // Pre-load TTS voices on mount so they're ready when needed
+  // (browsers load voices async - this prevents fallback to robotic default)
+  useEffect(() => {
+    preloadVoices()
+  }, [])
 
   const toggleSound = () => {
     const newVal = !soundOn
@@ -198,14 +205,14 @@ export default function HomeScreen({ onStart, onStartMath }: HomeScreenProps) {
           </div>
           <div className="space-y-3 text-center sm:text-left">
             <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-              <Sparkles className="mr-1 h-3 w-3" /> Bimbel Rumbela
+              <Sparkles className="mr-1 h-3 w-3" /> RUMBELA GAMES
             </Badge>
             <h2 className="text-2xl font-black leading-tight text-slate-800 sm:text-4xl">
-              Petualangan Bahasa Inggris
+              RUMBELA GAMES
             </h2>
             <p className="text-sm text-slate-600 sm:text-base">
-              Pilih kategori, level, dan mode permainan favoritmu. Kumpulkan poin,
-              buka achievement, dan jadi juara Bahasa Inggris bersama Bela!
+              Belajar Bahasa Inggris & Berhitung jadi seru! Pilih kategori, level, dan mode favoritmu.
+              Kumpulkan poin, buka achievement, dan jadi juara bareng Bela!
             </p>
             {stats.totalGamesPlayed > 0 && (
               <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
@@ -541,7 +548,7 @@ export default function HomeScreen({ onStart, onStartMath }: HomeScreenProps) {
           draggable={false}
         />
         <p className="text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} Rumbela · Rumah belajar Anak · English Quest
+          &copy; {new Date().getFullYear()} Rumbela · Rumah belajar Anak · RUMBELA GAMES
         </p>
       </footer>
 

@@ -221,7 +221,7 @@ export default function AdminPanel({ onExit }: { onExit: () => void }) {
               <Lock className="h-7 w-7" />
             </motion.div>
             <h1 className="text-lg font-black uppercase tracking-wide">Admin Panel</h1>
-            <p className="text-xs text-white/70">Rumbela English Quest - Pengelola</p>
+            <p className="text-xs text-white/70">RUMBELA GAMES - Pengelola</p>
           </div>
           <div className="space-y-4 p-6">
             <form onSubmit={handleLogin} className="space-y-3">
@@ -275,7 +275,7 @@ export default function AdminPanel({ onExit }: { onExit: () => void }) {
               🛡️ Admin Panel
             </h1>
             <p className="text-xs text-slate-500">
-              Rumbela English Quest - Manajemen Kode Akses
+              RUMBELA GAMES - Manajemen Kode Akses
             </p>
           </div>
           <div className="flex gap-2">

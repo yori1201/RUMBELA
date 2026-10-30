@@ -25,7 +25,7 @@ interface MathModeProps {
   onExit: () => void
 }
 
-// ===== TTS Hook (Web Speech API) =====
+// ===== TTS Hook (Web Speech API) - Natural Voice =====
 function useTTS() {
   const speakRef = useRef<((text: string, rate?: number) => void) | null>(null)
 
@@ -33,20 +33,80 @@ function useTTS() {
     if (typeof window === "undefined") return
     if (!("speechSynthesis" in window)) return
 
-    speakRef.current = (text: string, rate = 0.9) => {
+    // Cache: prioritaskan voice natural (bukan default robotic)
+    let preferredVoice: SpeechSynthesisVoice | null = null
+    let voicesLoaded = false
+
+    function pickNaturalVoice() {
+      const voices = window.speechSynthesis.getVoices()
+      if (!voices.length) return
+
+      voicesLoaded = true
+      // Priority order for Indonesian natural voices:
+      // 1. Google Bahasa Indonesia (cloud, paling natural)
+      // 2. Microsoft voice (online, natural)
+      // 3.Damay, Andika, Sari (Windows local)
+      // 4. Female Indonesian voice (biasanya lebih natural)
+      // 5. Fallback: any id-ID voice
+      const idVoices = voices.filter((v) => v.lang === "id-ID" || v.lang.startsWith("id"))
+
+      const priorities = [
+        // Google cloud voice paling natural
+        (v: SpeechSynthesisVoice) => v.name.includes("Google") && v.lang.startsWith("id"),
+        // Microsoft online natural
+        (v: SpeechSynthesisVoice) => v.name.includes("Microsoft") && v.lang.startsWith("id") && v.name.toLowerCase().includes("gadis"),
+        (v: SpeechSynthesisVoice) => v.name.includes("Microsoft") && v.lang.startsWith("id") && v.name.toLowerCase().includes("ardi"),
+        // SAPI5 natural voices (Damay, Andika)
+        (v: SpeechSynthesisVoice) => v.name.includes("Microsoft") && v.lang.startsWith("id"),
+        // Female biasanya lebih natural
+        (v: SpeechSynthesisVoice) => v.lang.startsWith("id") && /female|gadis|sari|damay|ayu/i.test(v.name),
+        // Any Indonesian voice
+        (v: SpeechSynthesisVoice) => v.lang.startsWith("id"),
+      ]
+
+      for (const predicate of priorities) {
+        const found = idVoices.find(predicate)
+        if (found) {
+          preferredVoice = found
+          break
+        }
+      }
+
+      // Last resort: any voice with id
+      if (!preferredVoice && idVoices.length > 0) {
+        preferredVoice = idVoices[0]
+      }
+    }
+
+    pickNaturalVoice()
+
+    // Voice list loads async on some browsers - listen for onvoiceschanged
+    if (!voicesLoaded) {
+      window.speechSynthesis.addEventListener("voiceschanged", pickNaturalVoice)
+    }
+
+    speakRef.current = (text: string, rate = 0.92) => {
       try {
         window.speechSynthesis.cancel()
         const u = new SpeechSynthesisUtterance(text)
         u.lang = "id-ID"
+        // Slightly slower than default for clarity, but not too slow
         u.rate = rate
-        u.pitch = 1.1
-        const voices = window.speechSynthesis.getVoices()
-        const idVoice = voices.find((v) => v.lang.startsWith("id"))
-        if (idVoice) u.voice = idVoice
+        // pitch 1.0 = natural (default). Hindari pitch tinggi yang bikin robotic.
+        u.pitch = 1.0
+        u.volume = 1.0
+        // Jangan set pitch tinggi. Use natural voice if available.
+        if (preferredVoice) {
+          u.voice = preferredVoice
+        }
         window.speechSynthesis.speak(u)
       } catch (e) {
         console.warn("TTS error:", e)
       }
+    }
+
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", pickNaturalVoice)
     }
   }, [])
 
@@ -326,7 +386,7 @@ export default function MathMode({ level, onComplete, onExit }: MathModeProps) {
           </AnimatePresence>
 
           {/* ===== Bubble Answer Area ===== */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {currentQuestion.options.map((opt, idx) => {
               const isSelected = selectedAnswer === opt
               const isCorrect = opt === currentQuestion.answer
@@ -343,24 +403,31 @@ export default function MathMode({ level, onComplete, onExit }: MathModeProps) {
                     opacity: isPopped ? 0 : 1,
                   }}
                   transition={{ delay: idx * 0.06, type: "spring", stiffness: 200 }}
-                  whileHover={!showResult ? { scale: 1.08, y: -4 } : {}}
-                  whileTap={!showResult ? { scale: 0.92 } : {}}
+                  whileHover={!showResult ? { scale: 1.06, y: -3 } : {}}
+                  whileTap={!showResult ? { scale: 0.94 } : {}}
                   onClick={() => handleAnswer(opt)}
                   disabled={showResult}
-                  className={`relative aspect-square rounded-full bg-gradient-to-br ${color.bg} p-0 shadow-xl ring-4 ${color.ring} ${color.glow} transition-all`}
+                  className="relative aspect-square rounded-full bg-gradient-to-br shadow-lg ring-2 transition-all"
                   style={{
-                    boxShadow: showResult && isCorrect
-                      ? "0 0 30px rgba(88, 204, 2, 0.8)"
-                      : showResult && isSelected && !isCorrect
-                      ? "0 0 30px rgba(239, 68, 68, 0.6)"
-                      : undefined,
+                    // Compact bubble: max 96px wide, lebih kecil dari sebelumnya
+                    maxWidth: "96px",
+                    maxHeight: "96px",
+                    margin: "0 auto",
+                    width: "100%",
+                    height: "auto",
+                    aspectRatio: "1 / 1",
                   }}
+                  data-bubble-gradient={color.bg}
+                  data-bubble-ring={color.ring}
+                  data-bubble-glow={color.glow}
                 >
-                  {/* Bubble shine effect */}
-                  <div className="absolute left-1/4 top-1/5 h-6 w-6 rounded-full bg-white/40 blur-sm" />
+                  {/* Apply color via inline class because Tailwind needs static class names */}
+                  <span className={`absolute inset-0 rounded-full bg-gradient-to-br ${color.bg} ring-4 ${color.ring} shadow-[0_4px_12px_rgba(0,0,0,0.15)]`} />
+                  {/* Bubble shine effect - smaller */}
+                  <div className="absolute left-[18%] top-[15%] h-3 w-3 rounded-full bg-white/50 blur-[1px]" />
 
-                  {/* Number */}
-                  <span className="relative z-10 flex h-full items-center justify-center text-2xl font-black text-white drop-shadow-lg sm:text-3xl">
+                  {/* Number - MUCH BIGGER */}
+                  <span className="relative z-10 flex h-full w-full items-center justify-center text-4xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] sm:text-5xl">
                     {opt}
                   </span>
 
@@ -369,18 +436,18 @@ export default function MathMode({ level, onComplete, onExit }: MathModeProps) {
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute inset-0 flex items-center justify-center rounded-full bg-emerald-500/80"
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-emerald-500/85"
                     >
-                      <Check className="h-10 w-10 text-white" strokeWidth={4} />
+                      <Check className="h-8 w-8 text-white" strokeWidth={4} />
                     </motion.div>
                   )}
                   {showResult && isSelected && !isCorrect && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute inset-0 flex items-center justify-center rounded-full bg-rose-500/80"
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-rose-500/85"
                     >
-                      <X className="h-10 w-10 text-white" strokeWidth={4} />
+                      <X className="h-8 w-8 text-white" strokeWidth={4} />
                     </motion.div>
                   )}
 

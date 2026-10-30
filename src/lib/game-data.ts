@@ -1,5 +1,5 @@
 // ============================================================
-// Rumbela English Quest - Game Data
+// RUMBELA GAMES - Game Data
 // Materi belajar Bahasa Inggris untuk bimbel Rumbela
 // ============================================================
 

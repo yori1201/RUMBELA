@@ -1,5 +1,5 @@
 // ============================================================
-// Rumbela English Quest - Extra Questions Bank (Phase 2)
+// RUMBELA GAMES - Extra Questions Bank (Phase 2)
 // 239 soal tambahan untuk perbanyak bank soal & variasi randomisasi
 // Generated: questions-extra.ts
 // ============================================================
